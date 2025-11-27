@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Upload, Menu, X } from "lucide-react";
+import { Search, Bell, Upload, Menu, X, ShoppingBag, Coins } from "lucide-react";
 import { useState } from "react";
 import { SignupModal } from "@/components/auth/SignupModal";
 
@@ -48,10 +48,22 @@ export function Navbar() {
                 Producers
               </span>
             </Link>
+             <Link href="/store">
+              <span className={`text-sm font-medium transition-colors cursor-pointer flex items-center gap-1 ${isActive('/store') ? 'text-yellow-400' : 'text-muted-foreground hover:text-yellow-400'}`}>
+                <ShoppingBag className="w-4 h-4" /> Store
+              </span>
+            </Link>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            
+            {/* User Coins Display (Mock) */}
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold mr-2">
+              <Coins className="w-3.5 h-3.5" />
+              <span>1,250</span>
+            </div>
+
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white hidden sm:flex">
               <Search className="w-5 h-5" />
             </Button>
@@ -91,6 +103,7 @@ export function Navbar() {
               <Link href="/leaderboard" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Leaderboard</Link>
               <Link href="/artists" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Artists</Link>
               <Link href="/producers" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Producers</Link>
+              <Link href="/store" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-yellow-400 hover:text-yellow-300 flex items-center gap-2"><ShoppingBag className="w-5 h-5" /> Store</Link>
               <div className="h-px bg-white/10 my-2" />
               <Button className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center">
                 Upload Track

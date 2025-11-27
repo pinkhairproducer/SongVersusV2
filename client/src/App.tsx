@@ -9,6 +9,8 @@ import Battles from "@/pages/Battles";
 import BattleDetail from "@/pages/BattleDetail";
 import Artists from "@/pages/Artists";
 import Producers from "@/pages/Producers";
+import Store from "@/pages/Store";
+import Leaderboard from "@/pages/Leaderboard";
 
 function Router() {
   return (
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/battle/:id" component={BattleDetail} />
       <Route path="/artists" component={Artists} />
       <Route path="/producers" component={Producers} />
+      <Route path="/store" component={Store} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route component={NotFound} />
     </Switch>
   );
