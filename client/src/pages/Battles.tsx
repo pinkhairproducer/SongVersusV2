@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { SignupModal } from "@/components/auth/SignupModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchBattles, createBattle } from "@/lib/api";
+import { fetchBattles, createBattle, joinBattle } from "@/lib/api";
 
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
 import cover2 from "@assets/generated_images/dark_trap_music_album_art.png";
@@ -22,15 +22,25 @@ export default function Battles() {
   const { toast } = useToast();
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const BATTLE_COST = 250;
+  const BATTLE_JOIN_COST = 250;
   const queryClient = useQueryClient();
 
-  const { data: battlesData, isLoading } = useQuery({
+  const { data: battlesData, isLoading, refetch } = useQuery({
     queryKey: ["battles"],
     queryFn: fetchBattles,
+    refetchInterval: 5000,
   });
 
   const createBattleMutation = useMutation({
     mutationFn: createBattle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["battles"] });
+    },
+  });
+
+  const joinBattleMutation = useMutation({
+    mutationFn: ({ battleId, artist, track, cover }: { battleId: number; artist: string; track: string; cover: string }) =>
+      joinBattle(battleId, user!.id, artist, track, cover),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["battles"] });
     },
@@ -54,7 +64,7 @@ export default function Battles() {
         leftTrack: `New ${user.role === "producer" ? "Beat" : "Song"}`,
         leftCover: randomCover,
         leftUserId: user.id,
-        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
       toast({
@@ -65,6 +75,38 @@ export default function Battles() {
       toast({
         title: "Error",
         description: "Failed to create battle",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleJoinBattle = async (battleId: number) => {
+    if (!user) {
+      setIsSignupOpen(true);
+      return;
+    }
+
+    if (!spendCoins(BATTLE_JOIN_COST)) return;
+
+    try {
+      const covers = [cover1, cover2, cover3, cover4];
+      const randomCover = covers[Math.floor(Math.random() * covers.length)];
+      
+      await joinBattleMutation.mutateAsync({
+        battleId,
+        artist: user.name,
+        track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
+        cover: randomCover,
+      });
+
+      toast({
+        title: "Battle Joined!",
+        description: `You spent ${BATTLE_JOIN_COST} coins to join the battle!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join battle",
         variant: "destructive",
       });
     }
@@ -101,11 +143,14 @@ export default function Battles() {
           votes: battle.rightVotes,
           isLeading: battle.rightVotes > battle.leftVotes,
         } : null,
+        canJoin: !battle.rightArtist,
       };
     });
   };
 
-  const ALL_BATTLES = formatBattles(battlesData).filter(b => b.right !== null);
+  const allFormattedBattles = formatBattles(battlesData) || [];
+  const completeBattles = allFormattedBattles.filter(b => b.right !== null);
+  const openBattles = allFormattedBattles.filter(b => b.canJoin);
 
   if (isLoading) {
     return (
@@ -151,6 +196,7 @@ export default function Battles() {
                     size="lg" 
                     className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 rounded-full shadow-xl shadow-white/10"
                     onClick={handleStartBattle}
+                    data-testid="button-start-battle"
                   >
                     Start a New Battle
                   </Button>
@@ -161,16 +207,48 @@ export default function Battles() {
              </div>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="open" className="w-full">
             <TabsList className="bg-black/20 border border-white/10 p-1 rounded-lg mb-8 w-full md:w-auto flex-wrap h-auto">
-              <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-white/10 data-[state=active]:text-white">All Battles</TabsTrigger>
+              <TabsTrigger value="open" className="flex-1 md:flex-none data-[state=active]:bg-white/10 data-[state=active]:text-white">Open Battles ({openBattles.length})</TabsTrigger>
+              <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-white/10 data-[state=active]:text-white">All Battles ({completeBattles.length})</TabsTrigger>
               <TabsTrigger value="beats" className="flex-1 md:flex-none data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300">Beat Battles (Producers)</TabsTrigger>
               <TabsTrigger value="songs" className="flex-1 md:flex-none data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-300">Song Battles (Artists)</TabsTrigger>
             </TabsList>
 
+            <TabsContent value="open" className="mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {openBattles.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-muted-foreground">No open battles right now. Start one to get the party going!</p>
+                  </div>
+                ) : (
+                  openBattles.map((battle) => (
+                    <div key={battle.id} className="relative">
+                      <Link href={`/battle/${battle.id}`}>
+                        <div className="cursor-pointer">
+                          <BattleCard {...battle} />
+                        </div>
+                      </Link>
+                      <Button
+                        size="sm"
+                        className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-600 text-white"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleJoinBattle(battle.id);
+                        }}
+                        data-testid={`button-join-battle-${battle.id}`}
+                      >
+                        Join Battle
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+
             <TabsContent value="all" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {ALL_BATTLES.map((battle) => (
+                {completeBattles.map((battle) => (
                   <Link key={battle.id} href={`/battle/${battle.id}`}>
                     <div className="cursor-pointer">
                       <BattleCard {...battle} />
@@ -182,7 +260,7 @@ export default function Battles() {
             
             <TabsContent value="beats" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {ALL_BATTLES.filter(b => b.type === "beat").map((battle) => (
+                {completeBattles.filter(b => b.type === "beat").map((battle) => (
                   <Link key={battle.id} href={`/battle/${battle.id}`}>
                     <div className="cursor-pointer">
                       <BattleCard {...battle} />
@@ -194,7 +272,7 @@ export default function Battles() {
 
             <TabsContent value="songs" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {ALL_BATTLES.filter(b => b.type === "song").map((battle) => (
+                {completeBattles.filter(b => b.type === "song").map((battle) => (
                   <Link key={battle.id} href={`/battle/${battle.id}`}>
                      <div className="cursor-pointer">
                       <BattleCard {...battle} />

@@ -29,9 +29,22 @@ export async function createBattle(data: {
   const response = await fetch("/api/battles", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      endsAt: data.endsAt.toISOString(),
+    }),
   });
   if (!response.ok) throw new Error("Failed to create battle");
+  return response.json();
+}
+
+export async function joinBattle(battleId: number, userId: number, artist: string, track: string, cover: string): Promise<Battle> {
+  const response = await fetch(`/api/battles/${battleId}/join`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, artist, track, cover }),
+  });
+  if (!response.ok) throw new Error("Failed to join battle");
   return response.json();
 }
 
