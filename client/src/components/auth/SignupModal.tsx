@@ -15,12 +15,17 @@ interface SignupModalProps {
 export function SignupModal({ open, onOpenChange }: SignupModalProps) {
   const [role, setRole] = useState<"producer" | "artist" | null>(null);
   const [name, setName] = useState("");
-  const { login } = useUser();
+  const { signup } = useUser();
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (role && name) {
-      login(role, name);
-      onOpenChange(false);
+      const password = name.toLowerCase();
+      const success = await signup(role, name, password);
+      if (success) {
+        onOpenChange(false);
+        setName("");
+        setRole(null);
+      }
     }
   };
 

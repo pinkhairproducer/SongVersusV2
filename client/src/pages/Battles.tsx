@@ -3,69 +3,121 @@ import { Footer } from "@/components/layout/Footer";
 import { BattleCard } from "@/components/battle/BattleCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Filter, Coins } from "lucide-react";
+import { Filter, Coins, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { SignupModal } from "@/components/auth/SignupModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchBattles, createBattle } from "@/lib/api";
 
-// Mock Data (Reusing images for consistency)
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
 import cover2 from "@assets/generated_images/dark_trap_music_album_art.png";
 import cover3 from "@assets/generated_images/lo-fi_anime_album_art.png";
 import cover4 from "@assets/generated_images/future_bass_crystal_album_art.png";
 import { Link } from "wouter";
 
-const ALL_BATTLES = [
-  {
-    id: 1,
-    type: "beat",
-    timeLeft: "04:23:12",
-    left: { artist: "Neon Pulse", track: "Cyber Night", cover: cover1, votes: 1240, isLeading: true },
-    right: { artist: "Grimm Beatz", track: "Red Smoke", cover: cover2, votes: 890 }
-  },
-  {
-    id: 2,
-    type: "song",
-    timeLeft: "01:15:00",
-    left: { artist: "Lofi Study Girl", track: "Rainy Day", cover: cover3, votes: 3400 },
-    right: { artist: "Bass Drop King", track: "Crystal Shards", cover: cover4, votes: 3650, isLeading: true }
-  },
-  {
-    id: 3,
-    type: "beat",
-    timeLeft: "12:00:00",
-    left: { artist: "Synthwave Pro", track: "Retro Racer", cover: cover1, votes: 150 },
-    right: { artist: "Future Bass God", track: "Neon Lights", cover: cover4, votes: 120 }
-  },
-   {
-    id: 4,
-    type: "song",
-    timeLeft: "23:45:00",
-    left: { artist: "Vocal Queen", track: "High Notes", cover: cover2, votes: 500 },
-    right: { artist: "Rap God", track: "Fast Lane", cover: cover3, votes: 620, isLeading: true }
-  }
-];
-
 export default function Battles() {
   const { user, spendCoins } = useUser();
   const { toast } = useToast();
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const BATTLE_COST = 250;
+  const queryClient = useQueryClient();
 
-  const handleStartBattle = () => {
+  const { data: battlesData, isLoading } = useQuery({
+    queryKey: ["battles"],
+    queryFn: fetchBattles,
+  });
+
+  const createBattleMutation = useMutation({
+    mutationFn: createBattle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["battles"] });
+    },
+  });
+
+  const handleStartBattle = async () => {
     if (!user) {
       setIsSignupOpen(true);
       return;
     }
 
-    if (spendCoins(BATTLE_COST)) {
+    if (!spendCoins(BATTLE_COST)) return;
+
+    try {
+      const covers = [cover1, cover2, cover3, cover4];
+      const randomCover = covers[Math.floor(Math.random() * covers.length)];
+      
+      await createBattleMutation.mutateAsync({
+        type: user.role === "producer" ? "beat" : "song",
+        leftArtist: user.name,
+        leftTrack: `New ${user.role === "producer" ? "Beat" : "Song"}`,
+        leftCover: randomCover,
+        leftUserId: user.id,
+        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+      });
+
       toast({
         title: "Battle Started!",
         description: `You spent ${BATTLE_COST} coins to start a new battle. Waiting for opponent...`,
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create battle",
+        variant: "destructive",
+      });
     }
   };
+
+  const formatBattles = (battles: typeof battlesData) => {
+    if (!battles) return [];
+    
+    const covers = [cover1, cover2, cover3, cover4];
+    
+    return battles.map((battle) => {
+      const now = new Date();
+      const endsAt = new Date(battle.endsAt);
+      const timeLeft = Math.max(0, endsAt.getTime() - now.getTime());
+      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      return {
+        id: battle.id,
+        type: battle.type,
+        timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
+        left: {
+          artist: battle.leftArtist,
+          track: battle.leftTrack,
+          cover: battle.leftCover || covers[0],
+          votes: battle.leftVotes,
+          isLeading: battle.leftVotes > battle.rightVotes,
+        },
+        right: battle.rightArtist ? {
+          artist: battle.rightArtist,
+          track: battle.rightTrack || "",
+          cover: battle.rightCover || covers[1],
+          votes: battle.rightVotes,
+          isLeading: battle.rightVotes > battle.leftVotes,
+        } : null,
+      };
+    });
+  };
+
+  const ALL_BATTLES = formatBattles(battlesData).filter(b => b.right !== null);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-20 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

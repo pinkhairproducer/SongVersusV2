@@ -5,40 +5,42 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface Message {
-  id: number;
-  user: string;
-  avatar: string;
-  text: string;
-  time: string;
-}
-
-const MOCK_MESSAGES: Message[] = [
-  { id: 1, user: "Neon Pulse", avatar: "https://github.com/shadcn.png", text: "Anyone up for a trap battle?", time: "12:30" },
-  { id: 2, user: "Grimm Beatz", avatar: "https://github.com/shadcn.png", text: "I'm down! Send the invite.", time: "12:31" },
-  { id: 3, user: "LofiGirl", avatar: "https://github.com/shadcn.png", text: "Did you guys hear that new upload from BassKing?", time: "12:32" },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchChatMessages, sendChatMessage } from "@/lib/api";
+import { useUser } from "@/context/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 export function GlobalChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
   const [inputText, setInputText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useUser();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: messages } = useQuery({
+    queryKey: ["chat"],
+    queryFn: fetchChatMessages,
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: (text: string) => sendChatMessage(user!.id, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat"] });
+      setInputText("");
+    },
+    onError: () => {
+      toast({
+        title: "Failed to send message",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSend = () => {
-    if (!inputText.trim()) return;
-    
-    const newMessage: Message = {
-      id: Date.now(),
-      user: "You",
-      avatar: "https://github.com/shadcn.png",
-      text: inputText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages([...messages, newMessage]);
-    setInputText("");
+    if (!inputText.trim() || !user) return;
+    sendMessageMutation.mutate(inputText);
   };
 
   // Auto scroll to bottom
@@ -75,23 +77,26 @@ export function GlobalChat() {
 
             {/* Messages */}
             <div className="flex-grow overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
-              {messages.map((msg) => (
-                <div key={msg.id} className="flex gap-3">
-                  <Avatar className="w-8 h-8 border border-white/10 mt-1 flex-shrink-0">
-                    <AvatarImage src={msg.avatar} />
-                    <AvatarFallback>{msg.user[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-xs font-bold text-white">{msg.user}</span>
-                      <span className="text-[10px] text-muted-foreground">{msg.time}</span>
+              {(messages || []).map((msg) => {
+                const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div key={msg.id} className="flex gap-3">
+                    <Avatar className="w-8 h-8 border border-white/10 mt-1 flex-shrink-0">
+                      <AvatarImage src={msg.userAvatar} />
+                      <AvatarFallback>{msg.userName[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-xs font-bold text-white">{msg.userName}</span>
+                        <span className="text-[10px] text-muted-foreground">{time}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground bg-white/5 p-2 rounded-r-xl rounded-bl-xl">
+                        {msg.text}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground bg-white/5 p-2 rounded-r-xl rounded-bl-xl">
-                      {msg.text}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Input */}
@@ -103,10 +108,11 @@ export function GlobalChat() {
                 <Input 
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Type a message..." 
+                  placeholder={user ? "Type a message..." : "Login to chat"}
                   className="bg-white/5 border-white/10 focus-visible:ring-violet-500 h-9 text-sm"
+                  disabled={!user}
                 />
-                <Button type="submit" size="icon" className="h-9 w-9 bg-violet-500 hover:bg-violet-600 text-white">
+                <Button type="submit" size="icon" className="h-9 w-9 bg-violet-500 hover:bg-violet-600 text-white" disabled={!user}>
                   <Send className="w-4 h-4" />
                 </Button>
               </form>

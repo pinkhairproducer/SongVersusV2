@@ -2,22 +2,37 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, TrendingUp, Flame, Crown, Coins, Star } from "lucide-react";
-
-const LEADERBOARD_DATA = [
-  { rank: 1, name: "Bass Drop King", xp: 15400, wins: 42, coins: 5200, avatar: "https://github.com/shadcn.png", trend: "up" },
-  { rank: 2, name: "Lofi Study Girl", xp: 14200, wins: 38, coins: 4150, avatar: "https://github.com/shadcn.png", trend: "same" },
-  { rank: 3, name: "Neon Pulse", xp: 12800, wins: 35, coins: 3800, avatar: "https://github.com/shadcn.png", trend: "up" },
-  { rank: 4, name: "Grimm Beatz", xp: 11500, wins: 30, coins: 2900, avatar: "https://github.com/shadcn.png", trend: "down" },
-  { rank: 5, name: "Synthwave Pro", xp: 10200, wins: 28, coins: 2400, avatar: "https://github.com/shadcn.png", trend: "up" },
-  { rank: 6, name: "Vocal Queen", xp: 9800, wins: 25, coins: 2100, avatar: "https://github.com/shadcn.png", trend: "down" },
-  { rank: 7, name: "Rap God", xp: 8500, wins: 22, coins: 1800, avatar: "https://github.com/shadcn.png", trend: "same" },
-  { rank: 8, name: "Future Bass God", xp: 7200, wins: 18, coins: 1500, avatar: "https://github.com/shadcn.png", trend: "up" },
-  { rank: 9, name: "Soul Singer", xp: 6400, wins: 15, coins: 1200, avatar: "https://github.com/shadcn.png", trend: "down" },
-  { rank: 10, name: "Indie Voice", xp: 5100, wins: 12, coins: 900, avatar: "https://github.com/shadcn.png", trend: "same" },
-];
+import { Trophy, TrendingUp, Flame, Crown, Coins, Star, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchLeaderboard } from "@/lib/api";
 
 export default function Leaderboard() {
+  const { data: leaderboardData, isLoading } = useQuery({
+    queryKey: ["leaderboard"],
+    queryFn: fetchLeaderboard,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-20 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const LEADERBOARD_DATA = (leaderboardData || []).map((user, index) => ({
+    rank: index + 1,
+    name: user.name,
+    xp: user.xp,
+    wins: user.wins,
+    coins: user.coins,
+    avatar: user.avatar,
+    trend: "same",
+  }));
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
