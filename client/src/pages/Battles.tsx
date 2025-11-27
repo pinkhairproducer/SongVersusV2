@@ -3,7 +3,11 @@ import { Footer } from "@/components/layout/Footer";
 import { BattleCard } from "@/components/battle/BattleCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Filter } from "lucide-react";
+import { Filter, Coins } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { SignupModal } from "@/components/auth/SignupModal";
 
 // Mock Data (Reusing images for consistency)
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
@@ -44,6 +48,25 @@ const ALL_BATTLES = [
 ];
 
 export default function Battles() {
+  const { user, spendCoins } = useUser();
+  const { toast } = useToast();
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const BATTLE_COST = 250;
+
+  const handleStartBattle = () => {
+    if (!user) {
+      setIsSignupOpen(true);
+      return;
+    }
+
+    if (spendCoins(BATTLE_COST)) {
+      toast({
+        title: "Battle Started!",
+        description: `You spent ${BATTLE_COST} coins to start a new battle. Waiting for opponent...`,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -71,9 +94,18 @@ export default function Battles() {
                 <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
                   Challenge another artist or producer to a battle. Winner takes home the pot and climbs the leaderboard.
                 </p>
-                <Button size="lg" className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 rounded-full shadow-xl shadow-white/10">
-                  Start a New Battle
-                </Button>
+                <div className="flex flex-col items-center gap-2">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 rounded-full shadow-xl shadow-white/10"
+                    onClick={handleStartBattle}
+                  >
+                    Start a New Battle
+                  </Button>
+                  <span className="text-xs text-yellow-400 font-bold flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full border border-white/5">
+                    <Coins className="w-3 h-3" /> Cost: {BATTLE_COST} Coins
+                  </span>
+                </div>
              </div>
           </div>
 
@@ -124,6 +156,7 @@ export default function Battles() {
         </div>
       </main>
       <Footer />
+      <SignupModal open={isSignupOpen} onOpenChange={setIsSignupOpen} />
     </div>
   );
 }

@@ -1,14 +1,24 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Upload, Menu, X, ShoppingBag, Coins } from "lucide-react";
+import { Search, Bell, Upload, Menu, X, ShoppingBag, Coins, LogOut } from "lucide-react";
 import { useState } from "react";
 import { SignupModal } from "@/components/auth/SignupModal";
+import { useUser } from "@/context/UserContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const { user, logout } = useUser();
 
   const isActive = (path: string) => location === path;
 
@@ -58,11 +68,13 @@ export function Navbar() {
           {/* Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* User Coins Display (Mock) */}
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold mr-2">
-              <Coins className="w-3.5 h-3.5" />
-              <span>1,250</span>
-            </div>
+            {/* User Coins Display */}
+            {user && (
+              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold mr-2">
+                <Coins className="w-3.5 h-3.5" />
+                <span>{user.coins.toLocaleString()}</span>
+              </div>
+            )}
 
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white hidden sm:flex">
               <Search className="w-5 h-5" />
@@ -70,13 +82,51 @@ export function Navbar() {
             
             <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block" />
             
-            <Button 
-              variant="ghost" 
-              className="text-muted-foreground hover:text-white hover:bg-white/5"
-              onClick={() => setIsSignupOpen(true)}
-            >
-              Sign Up
-            </Button>
+            {!user ? (
+              <Button 
+                variant="ghost" 
+                className="text-muted-foreground hover:text-white hover:bg-white/5"
+                onClick={() => setIsSignupOpen(true)}
+              >
+                Sign Up
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-black/95 border-white/10 text-white" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.role === 'producer' ? 'Producer' : 'Artist'}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                    My Battles
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer text-red-400" onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button 
@@ -94,15 +144,35 @@ export function Navbar() {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-white/5 bg-black/95 backdrop-blur-xl">
             <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
+              {user && (
+                 <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.avatar} />
+                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                       <p className="font-bold text-white">{user.name}</p>
+                       <p className="text-xs text-yellow-400 flex items-center gap-1">
+                         <Coins className="w-3 h-3" /> {user.coins.toLocaleString()}
+                       </p>
+                    </div>
+                 </div>
+              )}
               <Link href="/battles" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Battles</Link>
               <Link href="/leaderboard" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Leaderboard</Link>
               <Link href="/artists" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Artists</Link>
               <Link href="/producers" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Producers</Link>
               <Link href="/store" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-yellow-400 hover:text-yellow-300 flex items-center gap-2"><ShoppingBag className="w-5 h-5" /> Store</Link>
-              <div className="h-px bg-white/10 my-2" />
-              <Button className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center">
-                Upload Track
-              </Button>
+              
+              {!user ? (
+                 <Button className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center" onClick={() => { setIsMobileMenuOpen(false); setIsSignupOpen(true); }}>
+                   Sign Up
+                 </Button>
+              ) : (
+                 <Button variant="destructive" className="w-full justify-center" onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
+                   Log Out
+                 </Button>
+              )}
             </div>
           </div>
         )}

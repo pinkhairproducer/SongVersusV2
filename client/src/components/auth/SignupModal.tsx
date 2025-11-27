@@ -1,8 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Mic, Music4, Check } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 interface SignupModalProps {
   open: boolean;
@@ -11,6 +14,15 @@ interface SignupModalProps {
 
 export function SignupModal({ open, onOpenChange }: SignupModalProps) {
   const [role, setRole] = useState<"producer" | "artist" | null>(null);
+  const [name, setName] = useState("");
+  const { login } = useUser();
+
+  const handleSignup = () => {
+    if (role && name) {
+      login(role, name);
+      onOpenChange(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -22,7 +34,20 @@ export function SignupModal({ open, onOpenChange }: SignupModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 py-6">
+        <div className="space-y-4 mt-4">
+           <div>
+             <Label htmlFor="username" className="text-white mb-2 block">Stage Name</Label>
+             <Input 
+              id="username" 
+              placeholder="Enter your artist name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="bg-black/20 border-white/10 text-white focus-visible:ring-violet-500"
+             />
+           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 py-4">
           <button
             onClick={() => setRole("producer")}
             className={cn(
@@ -65,8 +90,8 @@ export function SignupModal({ open, onOpenChange }: SignupModalProps) {
         <div className="space-y-3">
           <Button 
             className="w-full bg-white text-black hover:bg-white/90 font-bold h-11" 
-            disabled={!role}
-            onClick={() => onOpenChange(false)}
+            disabled={!role || !name}
+            onClick={handleSignup}
           >
             Create Account as {role ? (role.charAt(0).toUpperCase() + role.slice(1)) : "..."}
           </Button>

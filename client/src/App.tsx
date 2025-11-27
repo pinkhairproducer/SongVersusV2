@@ -29,16 +29,19 @@ function Router() {
 
 import { GlobalChat } from "@/components/chat/GlobalChat";
 import { SlotMachine } from "@/components/games/SlotMachine";
+import { UserProvider } from "@/context/UserContext";
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-        <GlobalChat />
-        <SlotMachine />
-      </TooltipProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+          <GlobalChat />
+          <SlotMachine />
+        </TooltipProvider>
+      </UserProvider>
     </QueryClientProvider>
   );
 }

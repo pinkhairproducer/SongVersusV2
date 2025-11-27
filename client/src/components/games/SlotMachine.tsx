@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Coins, X, RotateCw, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/context/UserContext";
 
 const SYMBOLS = ["🍒", "🍋", "💎", "7️⃣", "🔔", "🍇"];
 const COST_PER_SPIN = 50;
@@ -11,15 +12,16 @@ export function SlotMachine() {
   const [isOpen, setIsOpen] = useState(false);
   const [reels, setReels] = useState(["7️⃣", "7️⃣", "7️⃣"]);
   const [spinning, setSpinning] = useState(false);
-  const [coins, setCoins] = useState(1250); // Mock wallet
   const [win, setWin] = useState(0);
+  const { user, spendCoins, addCoins } = useUser();
 
   const spin = () => {
-    if (coins < COST_PER_SPIN) return;
+    if (!user || spinning) return;
     
+    if (!spendCoins(COST_PER_SPIN)) return;
+
     setSpinning(true);
     setWin(0);
-    setCoins(c => c - COST_PER_SPIN);
 
     // Animation sequence
     let interval = setInterval(() => {
@@ -47,13 +49,17 @@ export function SlotMachine() {
     if (finalReels[0] === finalReels[1] && finalReels[1] === finalReels[2]) {
       const reward = 500;
       setWin(reward);
-      setCoins(c => c + reward);
+      addCoins(reward);
     } else if (finalReels[0] === finalReels[1] || finalReels[1] === finalReels[2]) {
       const reward = 50;
       setWin(reward);
-      setCoins(c => c + reward);
+      addCoins(reward);
     }
   };
+  
+  // If no user, don't render (or render disabled state, but simpler to hide for now or just show alert on click)
+  // Let's show it but prompt login if they try to open/play without user
+  const walletAmount = user?.coins || 0;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex flex-col items-start">
@@ -92,16 +98,20 @@ export function SlotMachine() {
               <div className="w-full space-y-3">
                 <div className="flex justify-between text-xs font-mono font-bold text-yellow-400 uppercase">
                   <span>Cost: {COST_PER_SPIN}</span>
-                  <span>Wallet: {coins}</span>
+                  <span>Wallet: {walletAmount}</span>
                 </div>
                 
-                <Button 
-                  onClick={spin} 
-                  disabled={spinning || coins < COST_PER_SPIN}
-                  className="w-full bg-red-600 hover:bg-red-500 text-white font-bold border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all"
-                >
-                  {spinning ? "Spinning..." : "SPIN!"}
-                </Button>
+                {user ? (
+                  <Button 
+                    onClick={spin} 
+                    disabled={spinning || walletAmount < COST_PER_SPIN}
+                    className="w-full bg-red-600 hover:bg-red-500 text-white font-bold border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all"
+                  >
+                    {spinning ? "Spinning..." : "SPIN!"}
+                  </Button>
+                ) : (
+                  <div className="text-center text-xs text-white bg-white/10 p-2 rounded">Login to Play</div>
+                )}
               </div>
 
               {/* Win Display */}
