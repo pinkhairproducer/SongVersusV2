@@ -27,12 +27,17 @@ function Router() {
   );
 }
 
+import { GlobalChat } from "@/components/chat/GlobalChat";
+import { SlotMachine } from "@/components/games/SlotMachine";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Router />
+        <GlobalChat />
+        <SlotMachine />
       </TooltipProvider>
     </QueryClientProvider>
   );

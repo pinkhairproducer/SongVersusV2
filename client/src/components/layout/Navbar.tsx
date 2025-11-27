@@ -78,11 +78,6 @@ export function Navbar() {
               Sign Up
             </Button>
 
-            <Button className="bg-white text-black hover:bg-white/90 font-bold hidden sm:flex">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload
-            </Button>
-
             {/* Mobile Menu Toggle */}
             <Button 
               variant="ghost" 

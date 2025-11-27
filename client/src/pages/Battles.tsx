@@ -60,10 +60,21 @@ export default function Battles() {
                <Button variant="outline" className="border-white/10 bg-black/20">
                  <Filter className="w-4 h-4 mr-2" /> Filter
                </Button>
-               <Button className="bg-white text-black hover:bg-white/90 font-bold">
-                 Create Battle
-               </Button>
             </div>
+          </div>
+
+          {/* Create Battle Area */}
+          <div className="bg-linear-to-r from-violet-500/10 via-fuchsia-500/10 to-violet-500/10 border border-white/10 rounded-2xl p-8 mb-12 text-center relative overflow-hidden">
+             <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)] pointer-events-none" />
+             <div className="relative z-10">
+                <h2 className="text-2xl font-bold text-white mb-2">Ready to enter the arena?</h2>
+                <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+                  Challenge another artist or producer to a battle. Winner takes home the pot and climbs the leaderboard.
+                </p>
+                <Button size="lg" className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 rounded-full shadow-xl shadow-white/10">
+                  Start a New Battle
+                </Button>
+             </div>
           </div>
 
           <Tabs defaultValue="all" className="w-full">
