@@ -52,8 +52,6 @@ export default function Battles() {
       return;
     }
 
-    if (!spendCoins(BATTLE_COST)) return;
-
     try {
       const covers = [cover1, cover2, cover3, cover4];
       const randomCover = covers[Math.floor(Math.random() * covers.length)];
@@ -66,6 +64,15 @@ export default function Battles() {
         leftUserId: user.id,
         endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
+
+      if (!spendCoins(BATTLE_COST)) {
+        toast({
+          title: "Battle Created but Not Enough Coins",
+          description: "Your battle was created but you didn't have enough coins in your account",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Battle Started!",
@@ -86,8 +93,6 @@ export default function Battles() {
       return;
     }
 
-    if (!spendCoins(BATTLE_JOIN_COST)) return;
-
     try {
       const covers = [cover1, cover2, cover3, cover4];
       const randomCover = covers[Math.floor(Math.random() * covers.length)];
@@ -98,6 +103,15 @@ export default function Battles() {
         track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
         cover: randomCover,
       });
+
+      if (!spendCoins(BATTLE_JOIN_COST)) {
+        toast({
+          title: "Battle Joined but Not Enough Coins",
+          description: "You joined the battle but didn't have enough coins in your account",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Battle Joined!",

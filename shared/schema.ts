@@ -66,13 +66,17 @@ export const insertUserSchema = createInsertSchema(users).omit({
   avatar: true,
 });
 
-export const insertBattleSchema = createInsertSchema(battles).omit({
-  id: true,
-  createdAt: true,
-  status: true,
-  leftVotes: true,
-  rightVotes: true,
-});
+export const insertBattleSchema = createInsertSchema(battles)
+  .omit({
+    id: true,
+    createdAt: true,
+    status: true,
+    leftVotes: true,
+    rightVotes: true,
+  })
+  .extend({
+    endsAt: z.union([z.date(), z.string().datetime()]).pipe(z.coerce.date()),
+  });
 
 export const insertVoteSchema = createInsertSchema(votes).omit({
   id: true,
