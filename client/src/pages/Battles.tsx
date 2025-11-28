@@ -85,30 +85,29 @@ export default function Battles() {
     }
 
     try {
-      if (!spendCoins(BATTLE_COST)) {
-        return;
-      }
-
       const covers = [cover1, cover2, cover3, cover4];
       const randomCover = covers[Math.floor(Math.random() * covers.length)];
       
       await createBattleMutation.mutateAsync({
         type: user.role === "producer" ? "beat" : "song",
+        genre: "general",
         leftArtist: user.name,
         leftTrack: `New ${user.role === "producer" ? "Beat" : "Song"}`,
-        leftCover: randomCover,
+        leftAudio: randomCover,
         leftUserId: user.id,
         endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
+
+      spendCoins(BATTLE_COST);
 
       toast({
         title: "Battle Started!",
         description: `You spent ${BATTLE_COST} coins to start a new battle. Waiting for opponent...`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create battle",
+        description: error.message || "Failed to create battle",
         variant: "destructive",
       });
     }
@@ -130,10 +129,6 @@ export default function Battles() {
     }
 
     try {
-      if (!spendCoins(BATTLE_JOIN_COST)) {
-        return;
-      }
-
       const covers = [cover1, cover2, cover3, cover4];
       const randomCover = covers[Math.floor(Math.random() * covers.length)];
       
@@ -144,14 +139,16 @@ export default function Battles() {
         cover: randomCover,
       });
 
+      spendCoins(BATTLE_JOIN_COST);
+
       toast({
         title: "Battle Joined!",
         description: `You spent ${BATTLE_JOIN_COST} coins to join the battle!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to join battle",
+        description: error.message || "Failed to join battle",
         variant: "destructive",
       });
     }
@@ -177,14 +174,14 @@ export default function Battles() {
         left: {
           artist: battle.leftArtist,
           track: battle.leftTrack,
-          cover: battle.leftCover || covers[0],
+          cover: battle.leftAudio || covers[0],
           votes: battle.leftVotes,
           isLeading: battle.leftVotes > battle.rightVotes,
         },
         right: battle.rightArtist ? {
           artist: battle.rightArtist,
           track: battle.rightTrack || "",
-          cover: battle.rightCover || covers[1],
+          cover: battle.rightAudio || covers[1],
           votes: battle.rightVotes,
           isLeading: battle.rightVotes > battle.leftVotes,
         } : null,

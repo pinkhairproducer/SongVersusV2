@@ -26,9 +26,10 @@ export async function fetchBattle(id: number): Promise<Battle> {
 
 export async function createBattle(data: {
   type: string;
+  genre: string;
   leftArtist: string;
   leftTrack: string;
-  leftCover: string;
+  leftAudio: string;
   leftUserId: number | null;
   endsAt: Date;
 }): Promise<Battle> {
@@ -40,7 +41,10 @@ export async function createBattle(data: {
       endsAt: data.endsAt.toISOString(),
     }),
   });
-  if (!response.ok) throw new Error("Failed to create battle");
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to create battle");
+  }
   return response.json();
 }
 
