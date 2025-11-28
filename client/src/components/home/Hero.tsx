@@ -24,14 +24,14 @@ export function Hero() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sv-purple/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"></div>
 
       {/* Animated Waveform - Full Width */}
-      <div className="fixed top-1/2 left-0 right-0 -translate-y-1/2 h-48 opacity-30 pointer-events-none z-[1]">
-        <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-[0.5]">
-          <path d="M0,10 Q5,15 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10">
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-48 w-full opacity-30 pointer-events-none z-[1]">
+        <svg viewBox="-10 0 120 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-[0.5]">
+          <path d="M-10,10 Q0,10 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10 T110,10">
             <animate attributeName="d" dur="4s" repeatCount="indefinite"
-              values="M0,10 Q5,15 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10;
-                      M0,10 Q5,5 10,10 T20,15 T30,5 T40,12 T50,8 T60,14 T70,6 T80,12 T90,8 T100,10;
-                      M0,10 Q5,12 10,10 T20,8 T30,12 T40,6 T50,14 T60,8 T70,12 T80,6 T90,14 T100,10;
-                      M0,10 Q5,15 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10" />
+              values="M-10,10 Q0,10 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10 T110,10;
+                      M-10,10 Q0,15 10,5 T20,15 T30,5 T40,12 T50,8 T60,14 T70,6 T80,12 T90,8 T100,14 T110,10;
+                      M-10,10 Q0,5 10,15 T20,8 T30,12 T40,6 T50,14 T60,8 T70,12 T80,6 T90,14 T100,8 T110,10;
+                      M-10,10 Q0,10 10,10 T20,10 T30,10 T40,10 T50,10 T60,10 T70,10 T80,10 T90,10 T100,10 T110,10" />
           </path>
         </svg>
       </div>
