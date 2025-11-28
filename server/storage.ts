@@ -154,6 +154,8 @@ export class DatabaseStorage implements IStorage {
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
           name: userData.firstName || userData.email?.split('@')[0] || 'User',
+          role: 'artist',
+          roleSelected: false,
         })
         .returning();
       return user;
