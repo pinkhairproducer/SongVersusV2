@@ -21,18 +21,19 @@ export const users = pgTable("users", {
 export const battles = pgTable("battles", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(),
-  status: text("status").notNull().default("active"),
+  genre: text("genre").notNull(),
+  status: text("status").notNull().default("pending"),
   leftArtist: text("left_artist").notNull(),
   leftTrack: text("left_track").notNull(),
-  leftCover: text("left_cover").notNull(),
+  leftAudio: text("left_audio").notNull(),
   leftUserId: integer("left_user_id").references(() => users.id),
   rightArtist: text("right_artist"),
   rightTrack: text("right_track"),
-  rightCover: text("right_cover"),
+  rightAudio: text("right_audio"),
   rightUserId: integer("right_user_id").references(() => users.id),
   leftVotes: integer("left_votes").notNull().default(0),
   rightVotes: integer("right_votes").notNull().default(0),
-  endsAt: timestamp("ends_at").notNull(),
+  endsAt: timestamp("ends_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -76,10 +77,19 @@ export const insertBattleSchema = createInsertSchema(battles)
     status: true,
     leftVotes: true,
     rightVotes: true,
-  })
-  .extend({
-    endsAt: z.union([z.date(), z.string().datetime()]).pipe(z.coerce.date()),
+    endsAt: true,
+    rightArtist: true,
+    rightTrack: true,
+    rightAudio: true,
+    rightUserId: true,
   });
+
+export const joinBattleSchema = z.object({
+  battleId: z.number(),
+  artist: z.string().min(1),
+  track: z.string().min(1),
+  audio: z.string().min(1),
+});
 
 export const insertVoteSchema = createInsertSchema(votes).omit({
   id: true,
