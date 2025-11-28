@@ -85,6 +85,22 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/users/:id/profile", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { avatar, bio } = req.body;
+      
+      if (!avatar || bio === undefined) {
+        return res.status(400).json({ error: "Avatar and bio are required" });
+      }
+
+      const user = await storage.updateUserProfile(id, avatar, bio);
+      res.json({ ...user, password: undefined });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   app.get("/api/leaderboard", async (req, res) => {
     try {
       const users = await storage.getLeaderboard();

@@ -148,6 +148,16 @@ export async function markAllNotificationsAsRead(userId: number): Promise<void> 
   if (!response.ok) throw new Error("Failed to mark all notifications as read");
 }
 
+export async function updateUserProfile(userId: number, avatar: string, bio: string): Promise<User> {
+  const response = await fetch(`/api/users/${userId}/profile`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ avatar, bio }),
+  });
+  if (!response.ok) throw new Error("Failed to update profile");
+  return response.json();
+}
+
 export interface StripeProduct {
   id: string;
   name: string;

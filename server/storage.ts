@@ -49,6 +49,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserCoins(id: number, coins: number): Promise<void>;
   updateUserStats(id: number, xp: number, wins: number): Promise<void>;
+  updateUserProfile(id: number, avatar: string, bio: string): Promise<User>;
   updateUserStripeInfo(id: number, stripeCustomerId: string | null, stripeSubscriptionId: string | null, membership: string): Promise<User>;
   getLeaderboard(limit?: number): Promise<User[]>;
 
@@ -114,6 +115,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserStats(id: number, xp: number, wins: number): Promise<void> {
     await db.update(users).set({ xp, wins }).where(eq(users.id, id));
+  }
+
+  async updateUserProfile(id: number, avatar: string, bio: string): Promise<User> {
+    const [user] = await db.update(users).set({ avatar, bio }).where(eq(users.id, id)).returning();
+    return user;
   }
 
   async updateUserStripeInfo(

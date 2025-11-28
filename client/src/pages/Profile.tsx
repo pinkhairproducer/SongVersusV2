@@ -2,13 +2,16 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Trophy, Zap, Coins, TrendingUp } from "lucide-react";
+import { Trophy, Zap, Coins, TrendingUp, Edit } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useLocation } from "wouter";
+import { useState } from "react";
+import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 
 export default function Profile() {
   const { user } = useUser();
   const [, setLocation] = useLocation();
+  const [editOpen, setEditOpen] = useState(false);
 
   if (!user) {
     return (
@@ -45,6 +48,9 @@ export default function Profile() {
               <p className="text-violet-400 font-mono mb-6 capitalize">
                 {user.role === "producer" ? "🎛️ Producer" : "🎤 Artist"}
               </p>
+              {user.bio && (
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">{user.bio}</p>
+              )}
               
               <div className="flex justify-center gap-8 flex-wrap">
                 <div className="flex flex-col items-center">
@@ -69,14 +75,26 @@ export default function Profile() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button className="bg-white text-black hover:bg-white/90 font-bold" onClick={() => setLocation("/battles")}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button className="bg-white text-black hover:bg-white/90 font-bold" onClick={() => setLocation("/battles")} data-testid="button-join-battle">
                 Join a Battle
               </Button>
-              <Button variant="outline" className="border-white/10" onClick={() => setLocation("/store")}>
+              <Button variant="outline" className="border-white/10" onClick={() => setLocation("/store")} data-testid="button-visit-store">
                 Visit Store
               </Button>
+              <Button variant="outline" className="border-white/10" onClick={() => setEditOpen(true)} data-testid="button-edit-profile">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
             </div>
+
+            <EditProfileDialog
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              userId={user.id}
+              currentAvatar={user.avatar}
+              currentBio={user.bio || ""}
+            />
           </div>
         </div>
       </main>

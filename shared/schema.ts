@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   xp: integer("xp").notNull().default(0),
   wins: integer("wins").notNull().default(0),
   avatar: text("avatar").notNull().default("https://github.com/shadcn.png"),
+  bio: text("bio").default(""),
   password: text("password").notNull(),
   membership: text("membership").notNull().default("free"),
   stripeCustomerId: text("stripe_customer_id"),
