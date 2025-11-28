@@ -87,6 +87,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   xp: true,
   wins: true,
   avatar: true,
+  bio: true,
 });
 
 export const insertBattleSchema = createInsertSchema(battles)
