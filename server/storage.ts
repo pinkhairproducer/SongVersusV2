@@ -109,6 +109,7 @@ export interface IStorage {
   updateUserLevel(userId: number, level: number): Promise<void>;
   completeTutorial(userId: number): Promise<void>;
   searchUsers(query: string): Promise<User[]>;
+  getUsersByRole(role: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -170,7 +171,10 @@ export class DatabaseStorage implements IStorage {
   async updateUserProfile(id: number, profileImageUrl: string, bio: string, name?: string, role?: string): Promise<User> {
     const updateData: any = { profileImageUrl, bio, updatedAt: new Date() };
     if (name) updateData.name = name;
-    if (role) updateData.role = role;
+    if (role) {
+      updateData.role = role;
+      updateData.roleSelected = true;
+    }
     const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
     return user;
   }
@@ -585,6 +589,10 @@ export class DatabaseStorage implements IStorage {
 
   async searchUsers(query: string): Promise<User[]> {
     return await db.select().from(users).where(sql`${users.name} ILIKE ${'%' + query + '%'}`).limit(10);
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role)).limit(50);
   }
 }
 

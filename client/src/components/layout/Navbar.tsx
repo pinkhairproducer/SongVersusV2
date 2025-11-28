@@ -232,8 +232,7 @@ export function Navbar() {
                 data-testid="button-login"
               >
                 <span className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 fill-black" />
-                  Enter
+                  Login / Sign Up
                 </span>
               </button>
             ) : (
@@ -333,8 +332,7 @@ export function Navbar() {
                    data-testid="button-mobile-login"
                  >
                    <span className="flex items-center justify-center gap-2">
-                     <Zap className="w-4 h-4 fill-black" />
-                     Enter Arena
+                     Login / Sign Up
                    </span>
                  </button>
               ) : (

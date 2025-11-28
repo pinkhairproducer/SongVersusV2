@@ -9,12 +9,15 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [progress, setProgress] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
   const [showTagline, setShowTagline] = useState(false);
+  const [showEnterButton, setShowEnterButton] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval);
+          setIsReady(true);
           return 100;
         }
         return prev + 2;
@@ -23,15 +26,21 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
     const titleTimer = setTimeout(() => setShowTitle(true), 300);
     const taglineTimer = setTimeout(() => setShowTagline(true), 800);
-    const completeTimer = setTimeout(() => onComplete(), 2500);
+    const enterTimer = setTimeout(() => setShowEnterButton(true), 1800);
 
     return () => {
       clearInterval(progressInterval);
       clearTimeout(titleTimer);
       clearTimeout(taglineTimer);
-      clearTimeout(completeTimer);
+      clearTimeout(enterTimer);
     };
-  }, [onComplete]);
+  }, []);
+
+  const handleEnter = () => {
+    if (isReady) {
+      onComplete();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -88,22 +97,47 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             )}
           </AnimatePresence>
 
-          <div className="w-64 h-1 bg-sv-gray/30 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-sv-pink via-sv-purple to-sv-gold"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ ease: "easeOut" }}
-            />
-          </div>
-          
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            className="mt-4 font-mono text-xs text-gray-500"
-          >
-            LOADING ARENA...
-          </motion.p>
+          {!showEnterButton && (
+            <>
+              <div className="w-64 h-1 bg-sv-gray/30 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-sv-pink via-sv-purple to-sv-gold"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ ease: "easeOut" }}
+                />
+              </div>
+              
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.5 }}
+                className="mt-4 font-mono text-xs text-gray-500"
+              >
+                LOADING ARENA...
+              </motion.p>
+            </>
+          )}
+
+          <AnimatePresence>
+            {showEnterButton && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleEnter}
+                className="relative group cursor-pointer"
+                data-testid="button-enter-arena"
+              >
+                <div className="absolute -inset-1 bg-gradient-to-r from-sv-pink via-sv-purple to-sv-gold rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-200 animate-pulse"></div>
+                <div className="relative px-12 py-4 bg-sv-black border-2 border-sv-pink rounded-lg">
+                  <span className="font-cyber font-black text-2xl text-white tracking-wider group-hover:text-sv-pink transition-colors">
+                    ENTER
+                  </span>
+                </div>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="absolute bottom-8 left-0 right-0 flex justify-center">

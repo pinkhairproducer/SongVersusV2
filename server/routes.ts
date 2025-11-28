@@ -77,6 +77,40 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/users/:id/role", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { role } = req.body;
+      
+      if (!role || !["artist", "producer"].includes(role)) {
+        return res.status(400).json({ error: "Invalid role. Must be 'artist' or 'producer'" });
+      }
+
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      if (!authUser || authUser.id !== id) {
+        return res.status(403).json({ error: "Not authorized to update this user" });
+      }
+
+      const currentUser = await storage.getUser(id);
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const user = await storage.updateUserProfile(
+        id, 
+        currentUser.profileImageUrl || "", 
+        currentUser.bio || "", 
+        currentUser.name, 
+        role
+      );
+      res.json(user);
+    } catch (error) {
+      console.error("Failed to update user role:", error);
+      res.status(500).json({ error: "Failed to update role" });
+    }
+  });
+
   app.get("/api/leaderboard", async (req, res) => {
     try {
       const users = await storage.getLeaderboard();
@@ -820,6 +854,106 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to complete tutorial" });
+    }
+  });
+
+  app.post("/api/follow/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const targetUserId = parseInt(req.params.userId);
+      
+      if (authUser.id === targetUserId) {
+        return res.status(400).json({ error: "Cannot follow yourself" });
+      }
+
+      const alreadyFollowing = await storage.isFollowing(authUser.id, targetUserId);
+      if (alreadyFollowing) {
+        return res.status(400).json({ error: "Already following" });
+      }
+
+      await storage.followUser(authUser.id, targetUserId);
+      
+      const targetUser = await storage.getUser(targetUserId);
+      await storage.createNotification({
+        userId: targetUserId,
+        fromUserId: authUser.id,
+        type: "follow",
+        message: `${authUser.name || 'Someone'} started following you`,
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to follow user" });
+    }
+  });
+
+  app.delete("/api/follow/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const targetUserId = parseInt(req.params.userId);
+      await storage.unfollowUser(authUser.id, targetUserId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unfollow user" });
+    }
+  });
+
+  app.get("/api/follow/:userId/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const targetUserId = parseInt(req.params.userId);
+      const isFollowing = await storage.isFollowing(authUser.id, targetUserId);
+      res.json({ isFollowing });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check follow status" });
+    }
+  });
+
+  app.get("/api/users/:userId/followers", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const followers = await storage.getFollowers(userId);
+      res.json(followers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch followers" });
+    }
+  });
+
+  app.get("/api/users/:userId/following", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const following = await storage.getFollowing(userId);
+      res.json(following);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch following" });
+    }
+  });
+
+  app.get("/api/users/role/:role", async (req, res) => {
+    try {
+      const role = req.params.role;
+      const users = await storage.getUsersByRole(role);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users by role" });
     }
   });
 

@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   name: text("name"),
   role: text("role").default("artist"),
+  roleSelected: boolean("role_selected").notNull().default(false),
   coins: integer("coins").notNull().default(1000),
   xp: integer("xp").notNull().default(0),
   level: integer("level").notNull().default(1),

@@ -11,6 +11,7 @@ interface User {
   profileImageUrl: string | null;
   name: string | null;
   role: string | null;
+  roleSelected: boolean;
   coins: number;
   xp: number;
   wins: number;

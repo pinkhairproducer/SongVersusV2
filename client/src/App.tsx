@@ -21,6 +21,7 @@ import MyBattles from "@/pages/MyBattles";
 import Customizations from "@/pages/Customizations";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Tutorial } from "@/components/Tutorial";
+import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 
 function Router() {
   return (
@@ -49,16 +50,27 @@ import { SlotMachine } from "@/components/games/SlotMachine";
 import { UserProvider, useUser } from "@/context/UserContext";
 
 function AppContent() {
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const [showSplash, setShowSplash] = useState(() => {
     return !sessionStorage.getItem("splash_seen");
   });
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showClassSelection, setShowClassSelection] = useState(false);
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("splash_seen", "true");
     setShowSplash(false);
     
+    if (user && !user.roleSelected) {
+      setShowClassSelection(true);
+    } else if (user && !user.tutorialCompleted) {
+      setShowTutorial(true);
+    }
+  };
+
+  const handleClassSelectionComplete = async () => {
+    setShowClassSelection(false);
+    await refreshUser();
     if (user && !user.tutorialCompleted) {
       setShowTutorial(true);
     }
@@ -83,17 +95,24 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (user && !user.tutorialCompleted && !showSplash) {
-      const tutorialSeen = sessionStorage.getItem("tutorial_seen");
-      if (!tutorialSeen) {
-        setShowTutorial(true);
+    if (user && !showSplash && !showClassSelection) {
+      if (!user.roleSelected) {
+        setShowClassSelection(true);
+      } else if (!user.tutorialCompleted) {
+        const tutorialSeen = sessionStorage.getItem("tutorial_seen");
+        if (!tutorialSeen) {
+          setShowTutorial(true);
+        }
       }
     }
-  }, [user, showSplash]);
+  }, [user, showSplash, showClassSelection]);
 
   return (
     <>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      {showClassSelection && user && (
+        <ClassSelectionDialog userId={user.id} onComplete={handleClassSelectionComplete} />
+      )}
       {showTutorial && (
         <Tutorial onComplete={handleTutorialComplete} onSkip={handleTutorialSkip} />
       )}

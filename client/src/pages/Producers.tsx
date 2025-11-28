@@ -1,20 +1,162 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Music4, UserPlus, User } from "lucide-react";
-import { useLocation } from "wouter";
+import { Music4, UserPlus, User, UserCheck, Loader2, Crown, Star } from "lucide-react";
+import { Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@/context/UserContext";
+import { useToast } from "@/hooks/use-toast";
+import type { User as UserType } from "@shared/schema";
 
-const PRODUCERS = [
-  { id: 1, name: "Neon Pulse", genre: "Synthwave", followers: "150k", avatar: "https://github.com/shadcn.png", trending: true },
-  { id: 2, name: "Grimm Beatz", genre: "Trap / Drill", followers: "89k", avatar: "https://github.com/shadcn.png", trending: true },
-  { id: 3, name: "Bass Drop King", genre: "Dubstep", followers: "210k", avatar: "https://github.com/shadcn.png", trending: false },
-  { id: 4, name: "Future Bass God", genre: "Future Bass", followers: "180k", avatar: "https://github.com/shadcn.png", trending: false },
-  { id: 5, name: "Retro Wave", genre: "Retrowave", followers: "45k", avatar: "https://github.com/shadcn.png", trending: true },
-  { id: 6, name: "HipHop Head", genre: "Boom Bap", followers: "67k", avatar: "https://github.com/shadcn.png", trending: false },
-];
+async function fetchProducers(): Promise<UserType[]> {
+  const response = await fetch("/api/users/role/producer");
+  if (!response.ok) throw new Error("Failed to fetch producers");
+  return response.json();
+}
+
+async function checkFollowStatus(userId: number): Promise<boolean> {
+  const response = await fetch(`/api/follow/${userId}/status`, {
+    credentials: "include",
+  });
+  if (!response.ok) return false;
+  const data = await response.json();
+  return data.isFollowing;
+}
+
+function MembershipBadge({ membership }: { membership: string }) {
+  if (membership === "elite") {
+    return (
+      <div className="flex items-center gap-1 px-2 py-0.5 bg-sv-gold/20 border border-sv-gold/50 rounded text-sv-gold text-xs font-bold">
+        <Crown className="w-3 h-3" />
+        ELITE
+      </div>
+    );
+  }
+  if (membership === "pro") {
+    return (
+      <div className="flex items-center gap-1 px-2 py-0.5 bg-sv-purple/20 border border-sv-purple/50 rounded text-sv-purple text-xs font-bold">
+        <Star className="w-3 h-3" />
+        PRO
+      </div>
+    );
+  }
+  return null;
+}
+
+function ProducerCard({ producer, currentUserId }: { producer: UserType; currentUserId?: number }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: isFollowing = false } = useQuery({
+    queryKey: ["followStatus", producer.id],
+    queryFn: () => checkFollowStatus(producer.id),
+    enabled: !!currentUserId && currentUserId !== producer.id,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/follow/${producer.id}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to follow");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["followStatus", producer.id] });
+      toast({ title: "Followed!", description: `You are now following ${producer.name}` });
+    },
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/follow/${producer.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to unfollow");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["followStatus", producer.id] });
+      toast({ title: "Unfollowed", description: `You unfollowed ${producer.name}` });
+    },
+  });
+
+  const handleFollowClick = () => {
+    if (!currentUserId) {
+      toast({ title: "Login Required", description: "Please login to follow producers", variant: "destructive" });
+      return;
+    }
+    if (isFollowing) {
+      unfollowMutation.mutate();
+    } else {
+      followMutation.mutate();
+    }
+  };
+
+  return (
+    <div className="bg-card/50 border border-white/5 rounded-xl p-6 hover:border-violet-500/30 transition-all group relative overflow-hidden" data-testid={`producer-card-${producer.id}`}>
+      <div className="absolute inset-0 bg-gradient-to-b from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="relative">
+          <img 
+            src={producer.profileImageUrl || "https://github.com/shadcn.png"} 
+            alt={producer.name || "Producer"} 
+            className="w-16 h-16 rounded-full border-2 border-white/10 group-hover:border-violet-500 transition-colors object-cover" 
+          />
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center border border-black">
+            <Music4 className="w-3 h-3 text-white" />
+          </div>
+        </div>
+        
+        <div className="flex-grow min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors truncate">
+              {producer.name || "Unknown Producer"}
+            </h3>
+            <MembershipBadge membership={producer.membership} />
+          </div>
+          <p className="text-sm text-muted-foreground">Level {producer.level} • {producer.wins} wins</p>
+        </div>
+
+        {currentUserId !== producer.id && (
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className={isFollowing ? "text-violet-400" : "text-muted-foreground hover:text-white"}
+            onClick={handleFollowClick}
+            disabled={followMutation.isPending || unfollowMutation.isPending}
+            data-testid={`button-follow-${producer.id}`}
+          >
+            {isFollowing ? <UserCheck className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+          </Button>
+        )}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+        <span className="text-xs font-medium text-muted-foreground">{producer.xp} XP</span>
+        <Link href={`/user/${producer.id}`}>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 border-white/10 hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/50 text-xs"
+            data-testid={`button-view-producer-${producer.id}`}
+          >
+            <User className="w-3 h-3 mr-2" /> View Profile
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function Producers() {
-  const [, setLocation] = useLocation();
+  const { user } = useUser();
+
+  const { data: producers = [], isLoading } = useQuery({
+    queryKey: ["producers"],
+    queryFn: fetchProducers,
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -28,46 +170,21 @@ export default function Producers() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PRODUCERS.map((producer) => (
-              <div key={producer.id} className="bg-card/50 border border-white/5 rounded-xl p-6 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-b from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                <div className="relative z-10 flex items-center gap-4">
-                  <div className="relative">
-                    <img src={producer.avatar} alt={producer.name} className="w-16 h-16 rounded-full border-2 border-white/10 group-hover:border-violet-500 transition-colors" />
-                    {producer.trending && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center border border-black">
-                        <Music4 className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-grow">
-                    <h3 className="font-bold text-white text-lg group-hover:text-violet-400 transition-colors">{producer.name}</h3>
-                    <p className="text-sm text-muted-foreground">{producer.genre}</p>
-                  </div>
-
-                  <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-white">
-                    <UserPlus className="w-5 h-5" />
-                  </Button>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
-                  <span className="text-xs font-medium text-muted-foreground">{producer.followers} Followers</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-8 border-white/10 hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/50 text-xs"
-                    onClick={() => setLocation("/profile")}
-                    data-testid={`button-view-producer-${producer.id}`}
-                  >
-                    <User className="w-3 h-3 mr-2" /> View Profile
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+            </div>
+          ) : producers.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No producers found yet. Be the first to join!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {producers.map((producer) => (
+                <ProducerCard key={producer.id} producer={producer} currentUserId={user?.id} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
       <Footer />
