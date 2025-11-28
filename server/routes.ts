@@ -2,56 +2,30 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import {
-  insertUserSchema,
   insertBattleSchema,
   insertVoteSchema,
   insertCommentSchema,
   insertChatMessageSchema,
-  insertFollowSchema,
-  insertNotificationSchema,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  // Auth/User routes
-  app.post("/api/auth/signup", async (req, res) => {
+  await setupAuth(app);
+
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const data = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existing = await storage.getUserByName(data.name);
-      if (existing) {
-        return res.status(400).json({ error: "User already exists" });
-      }
-
-      const user = await storage.createUser(data);
-      res.json({ user: { ...user, password: undefined } });
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      if (error.name === "ZodError") {
-        return res.status(400).json({ error: fromZodError(error).toString() });
-      }
-      res.status(500).json({ error: "Failed to create user" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { name, password } = req.body;
-      const user = await storage.getUserByName(name);
-
-      if (!user || user.password !== password) {
-        return res.status(401).json({ error: "Invalid credentials" });
-      }
-
-      res.json({ user: { ...user, password: undefined } });
+      const replitAuthId = req.user.claims.sub;
+      const user = await storage.getUserByReplitAuthId(replitAuthId);
+      res.json(user);
     } catch (error) {
-      res.status(500).json({ error: "Login failed" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
@@ -64,7 +38,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
 
-      res.json({ ...user, password: undefined });
+      res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch user" });
     }
@@ -89,14 +63,14 @@ export async function registerRoutes(
   app.patch("/api/users/:id/profile", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { avatar, bio } = req.body;
+      const { profileImageUrl, bio, name, role } = req.body;
       
-      if (!avatar || bio === undefined) {
-        return res.status(400).json({ error: "Avatar and bio are required" });
+      if (!profileImageUrl || bio === undefined) {
+        return res.status(400).json({ error: "Profile image URL and bio are required" });
       }
 
-      const user = await storage.updateUserProfile(id, avatar, bio);
-      res.json({ ...user, password: undefined });
+      const user = await storage.updateUserProfile(id, profileImageUrl, bio, name, role);
+      res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
     }
@@ -105,7 +79,7 @@ export async function registerRoutes(
   app.get("/api/leaderboard", async (req, res) => {
     try {
       const users = await storage.getLeaderboard();
-      res.json(users.map(u => ({ ...u, password: undefined })));
+      res.json(users);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
@@ -128,7 +102,7 @@ export async function registerRoutes(
         userId: followingId,
         fromUserId: followerId,
         type: "follow",
-        message: `${fromUser?.name} started following you`,
+        message: `${fromUser?.name || 'Someone'} started following you`,
       });
 
       res.json(follow);
@@ -153,7 +127,7 @@ export async function registerRoutes(
     try {
       const id = parseInt(req.params.id);
       const followers = await storage.getFollowers(id);
-      res.json(followers.map(u => ({ ...u, password: undefined })));
+      res.json(followers);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch followers" });
     }
@@ -163,7 +137,7 @@ export async function registerRoutes(
     try {
       const id = parseInt(req.params.id);
       const following = await storage.getFollowing(id);
-      res.json(following.map(u => ({ ...u, password: undefined })));
+      res.json(following);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch following" });
     }
@@ -199,7 +173,6 @@ export async function registerRoutes(
     }
   });
 
-  // Battle routes
   app.get("/api/battles", async (req, res) => {
     try {
       const battles = await storage.getAllBattles();
@@ -253,12 +226,10 @@ export async function registerRoutes(
     }
   });
 
-  // Vote routes
   app.post("/api/votes", async (req, res) => {
     try {
       const data = insertVoteSchema.parse(req.body);
       
-      // Check if user already voted
       const existing = await storage.getUserVote(data.battleId, data.userId);
       if (existing) {
         return res.status(400).json({ error: "Already voted" });
@@ -288,7 +259,6 @@ export async function registerRoutes(
     }
   });
 
-  // Comment routes
   app.get("/api/comments/:battleId", async (req, res) => {
     try {
       const battleId = parseInt(req.params.battleId);
@@ -312,7 +282,6 @@ export async function registerRoutes(
     }
   });
 
-  // Chat routes
   app.get("/api/chat", async (req, res) => {
     try {
       const messages = await storage.getChatMessages();
@@ -335,7 +304,6 @@ export async function registerRoutes(
     }
   });
 
-  // Stripe routes
   app.get("/api/stripe/config", async (req, res) => {
     try {
       const publishableKey = await getStripePublishableKey();

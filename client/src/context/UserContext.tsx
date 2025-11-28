@@ -1,51 +1,51 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface User {
   id: number;
-  name: string;
-  role: "producer" | "artist";
+  replitAuthId: string | null;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  name: string | null;
+  role: string | null;
   coins: number;
   xp: number;
   wins: number;
-  avatar: string;
-  membership: "free" | "pro" | "elite";
+  bio: string | null;
+  membership: string;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
 }
 
 interface UserContextType {
   user: User | null;
-  login: (role: "producer" | "artist", name: string, password: string) => Promise<boolean>;
-  signup: (role: "producer" | "artist", name: string, password: string) => Promise<boolean>;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: () => void;
   logout: () => void;
   spendCoins: (amount: number) => boolean;
   addCoins: (amount: number) => void;
   refreshUser: () => Promise<void>;
+  setUserData: (data: Partial<User>) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const { user: authUser, isLoading, isAuthenticated } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
-  // Load user from local storage on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("current_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (authUser) {
+      setUser(authUser as User);
+    } else if (!isLoading) {
+      setUser(null);
     }
-  }, []);
-
-  // Save user to local storage whenever it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("current_user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("current_user");
-    }
-  }, [user]);
+  }, [authUser, isLoading]);
 
   const refreshUser = async () => {
     if (!user) return;
@@ -61,81 +61,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (role: "producer" | "artist", name: string, password: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, role, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        toast({
-          title: "Signup Failed",
-          description: error.error || "Could not create account",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const { user: newUser } = await response.json();
-      setUser(newUser);
-      toast({
-        title: "Welcome to SongVersus!",
-        description: `You've joined as a ${role}. Here are 1,000 coins to get started!`,
-      });
-      return true;
-    } catch (error) {
-      toast({
-        title: "Network Error",
-        description: "Failed to connect to server",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  const login = async (role: "producer" | "artist", name: string, password: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, password }),
-      });
-
-      if (!response.ok) {
-        toast({
-          title: "Login Failed",
-          description: "Invalid username or password",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const { user: loggedInUser } = await response.json();
-      setUser(loggedInUser);
-      toast({
-        title: `Welcome back, ${loggedInUser.name}!`,
-        description: `You have ${loggedInUser.coins} coins`,
-      });
-      return true;
-    } catch (error) {
-      toast({
-        title: "Network Error",
-        description: "Failed to connect to server",
-        variant: "destructive",
-      });
-      return false;
-    }
+  const login = () => {
+    window.location.href = "/api/login";
   };
 
   const logout = () => {
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "See you next time!",
-    });
+    window.location.href = "/api/logout";
   };
 
   const spendCoins = (amount: number): boolean => {
@@ -152,7 +83,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newCoins = user.coins - amount;
     setUser({ ...user, coins: newCoins });
 
-    // Update on server
     fetch(`/api/users/${user.id}/coins`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -167,7 +97,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newCoins = user.coins + amount;
     setUser({ ...user, coins: newCoins });
 
-    // Update on server
     fetch(`/api/users/${user.id}/coins`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -175,8 +104,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }).catch((error) => console.error("Failed to update coins on server:", error));
   };
 
+  const setUserData = (data: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...data });
+    }
+  };
+
   return (
-    <UserContext.Provider value={{ user, login, signup, logout, spendCoins, addCoins, refreshUser }}>
+    <UserContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isAuthenticated, 
+      login, 
+      logout, 
+      spendCoins, 
+      addCoins, 
+      refreshUser,
+      setUserData
+    }}>
       {children}
     </UserContext.Provider>
   );

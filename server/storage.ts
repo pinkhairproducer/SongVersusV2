@@ -7,7 +7,7 @@ import {
   follows,
   notifications,
   type User,
-  type InsertUser,
+  type UpsertUser,
   type Battle,
   type InsertBattle,
   type Vote,
@@ -43,59 +43,56 @@ export interface StripePrice {
 }
 
 export interface IStorage {
-  // Users
   getUser(id: number): Promise<User | undefined>;
+  getUserByReplitAuthId(replitAuthId: string): Promise<User | undefined>;
   getUserByName(name: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(userData: UpsertUser): Promise<User>;
   updateUserCoins(id: number, coins: number): Promise<void>;
   updateUserStats(id: number, xp: number, wins: number): Promise<void>;
-  updateUserProfile(id: number, avatar: string, bio: string): Promise<User>;
+  updateUserProfile(id: number, profileImageUrl: string, bio: string, name?: string, role?: string): Promise<User>;
   updateUserStripeInfo(id: number, stripeCustomerId: string | null, stripeSubscriptionId: string | null, membership: string): Promise<User>;
   getLeaderboard(limit?: number): Promise<User[]>;
 
-  // Stripe data (read from stripe schema)
   listProducts(active?: boolean): Promise<StripeProduct[]>;
   listPrices(active?: boolean): Promise<StripePrice[]>;
   getProductsWithPrices(): Promise<Array<StripeProduct & { prices: StripePrice[] }>>;
   getSubscription(subscriptionId: string): Promise<any>;
 
-  // Battles
   getBattle(id: number): Promise<Battle | undefined>;
   getAllBattles(): Promise<Battle[]>;
   createBattle(battle: InsertBattle): Promise<Battle>;
   joinBattle(battleId: number, userId: number, artist: string, track: string, audio: string): Promise<Battle>;
   updateBattleVotes(battleId: number, side: "left" | "right", increment: number): Promise<void>;
 
-  // Votes
   getUserVote(battleId: number, userId: number): Promise<Vote | undefined>;
   createVote(vote: InsertVote): Promise<Vote>;
 
-  // Comments
-  getCommentsByBattle(battleId: number): Promise<Array<Comment & { userName: string; userAvatar: string }>>;
+  getCommentsByBattle(battleId: number): Promise<Array<Comment & { userName: string | null; userAvatar: string | null }>>;
   createComment(comment: InsertComment): Promise<Comment>;
 
-  // Chat
-  getChatMessages(limit?: number): Promise<Array<ChatMessage & { userName: string; userAvatar: string }>>;
+  getChatMessages(limit?: number): Promise<Array<ChatMessage & { userName: string | null; userAvatar: string | null }>>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
 
-  // Follows
   followUser(followerId: number, followingId: number): Promise<Follow>;
   unfollowUser(followerId: number, followingId: number): Promise<void>;
   isFollowing(followerId: number, followingId: number): Promise<boolean>;
   getFollowers(userId: number): Promise<User[]>;
   getFollowing(userId: number): Promise<User[]>;
 
-  // Notifications
-  getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string; fromUserAvatar?: string }>>;
+  getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string | null; fromUserAvatar?: string | null }>>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // Users
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByReplitAuthId(replitAuthId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.replitAuthId, replitAuthId));
     return user || undefined;
   }
 
@@ -104,9 +101,36 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = await this.getUserByReplitAuthId(userData.replitAuthId);
+    
+    if (existingUser) {
+      const [user] = await db
+        .update(users)
+        .set({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.replitAuthId, userData.replitAuthId))
+        .returning();
+      return user;
+    } else {
+      const [user] = await db
+        .insert(users)
+        .values({
+          replitAuthId: userData.replitAuthId,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          name: userData.firstName || userData.email?.split('@')[0] || 'User',
+        })
+        .returning();
+      return user;
+    }
   }
 
   async updateUserCoins(id: number, coins: number): Promise<void> {
@@ -117,8 +141,11 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set({ xp, wins }).where(eq(users.id, id));
   }
 
-  async updateUserProfile(id: number, avatar: string, bio: string): Promise<User> {
-    const [user] = await db.update(users).set({ avatar, bio }).where(eq(users.id, id)).returning();
+  async updateUserProfile(id: number, profileImageUrl: string, bio: string, name?: string, role?: string): Promise<User> {
+    const updateData: any = { profileImageUrl, bio, updatedAt: new Date() };
+    if (name) updateData.name = name;
+    if (role) updateData.role = role;
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
     return user;
   }
 
@@ -140,7 +167,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.xp)).limit(limit);
   }
 
-  // Stripe data (read from stripe schema)
   async listProducts(active: boolean = true): Promise<StripeProduct[]> {
     const result = await db.execute(
       sql`SELECT id, name, description, metadata, active FROM stripe.products WHERE active = ${active}`
@@ -210,7 +236,6 @@ export class DatabaseStorage implements IStorage {
     return result.rows[0] || null;
   }
 
-  // Battles
   async getBattle(id: number): Promise<Battle | undefined> {
     const [battle] = await db.select().from(battles).where(eq(battles.id, id));
     return battle || undefined;
@@ -255,7 +280,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Votes
   async getUserVote(battleId: number, userId: number): Promise<Vote | undefined> {
     const [vote] = await db
       .select()
@@ -269,8 +293,7 @@ export class DatabaseStorage implements IStorage {
     return vote;
   }
 
-  // Comments
-  async getCommentsByBattle(battleId: number): Promise<Array<Comment & { userName: string; userAvatar: string }>> {
+  async getCommentsByBattle(battleId: number): Promise<Array<Comment & { userName: string | null; userAvatar: string | null }>> {
     const result = await db
       .select({
         id: comments.id,
@@ -279,7 +302,7 @@ export class DatabaseStorage implements IStorage {
         text: comments.text,
         createdAt: comments.createdAt,
         userName: users.name,
-        userAvatar: users.avatar,
+        userAvatar: users.profileImageUrl,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -294,8 +317,7 @@ export class DatabaseStorage implements IStorage {
     return comment;
   }
 
-  // Chat
-  async getChatMessages(limit: number = 50): Promise<Array<ChatMessage & { userName: string; userAvatar: string }>> {
+  async getChatMessages(limit: number = 50): Promise<Array<ChatMessage & { userName: string | null; userAvatar: string | null }>> {
     const result = await db
       .select({
         id: chatMessages.id,
@@ -303,7 +325,7 @@ export class DatabaseStorage implements IStorage {
         text: chatMessages.text,
         createdAt: chatMessages.createdAt,
         userName: users.name,
-        userAvatar: users.avatar,
+        userAvatar: users.profileImageUrl,
       })
       .from(chatMessages)
       .innerJoin(users, eq(chatMessages.userId, users.id))
@@ -318,7 +340,6 @@ export class DatabaseStorage implements IStorage {
     return message;
   }
 
-  // Follows
   async followUser(followerId: number, followingId: number): Promise<Follow> {
     const [follow] = await db.insert(follows).values({ followerId, followingId }).returning();
     return follow;
@@ -358,8 +379,7 @@ export class DatabaseStorage implements IStorage {
       .then(results => results.map(r => r.users));
   }
 
-  // Notifications
-  async getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string; fromUserAvatar?: string }>> {
+  async getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string | null; fromUserAvatar?: string | null }>> {
     const result = await db
       .select({
         id: notifications.id,
@@ -371,7 +391,7 @@ export class DatabaseStorage implements IStorage {
         read: notifications.read,
         createdAt: notifications.createdAt,
         fromUserName: users.name,
-        fromUserAvatar: users.avatar,
+        fromUserAvatar: users.profileImageUrl,
       })
       .from(notifications)
       .leftJoin(users, eq(notifications.fromUserId, users.id))

@@ -1,22 +1,36 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, serial, integer, timestamp, boolean, index, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  role: text("role").notNull(),
+  replitAuthId: varchar("replit_auth_id").unique(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  name: text("name"),
+  role: text("role").default("artist"),
   coins: integer("coins").notNull().default(1000),
   xp: integer("xp").notNull().default(0),
   wins: integer("wins").notNull().default(0),
-  avatar: text("avatar").notNull().default("https://github.com/shadcn.png"),
   bio: text("bio").default(""),
-  password: text("password").notNull(),
   membership: text("membership").notNull().default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const battles = pgTable("battles", {
@@ -79,16 +93,14 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-  coins: true,
-  xp: true,
-  wins: true,
-  avatar: true,
-  bio: true,
-});
+export type User = typeof users.$inferSelect;
+export type UpsertUser = {
+  replitAuthId: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+};
 
 export const insertBattleSchema = createInsertSchema(battles)
   .omit({
@@ -135,10 +147,6 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
   createdAt: true,
 });
-
-// Types
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Battle = typeof battles.$inferSelect;
 export type InsertBattle = z.infer<typeof insertBattleSchema>;
