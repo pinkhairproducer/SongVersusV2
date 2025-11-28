@@ -4,6 +4,8 @@ import {
   votes,
   comments,
   chatMessages,
+  follows,
+  notifications,
   type User,
   type InsertUser,
   type Battle,
@@ -14,6 +16,10 @@ import {
   type InsertComment,
   type ChatMessage,
   type InsertChatMessage,
+  type Follow,
+  type InsertFollow,
+  type Notification,
+  type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -70,6 +76,19 @@ export interface IStorage {
   // Chat
   getChatMessages(limit?: number): Promise<Array<ChatMessage & { userName: string; userAvatar: string }>>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+
+  // Follows
+  followUser(followerId: number, followingId: number): Promise<Follow>;
+  unfollowUser(followerId: number, followingId: number): Promise<void>;
+  isFollowing(followerId: number, followingId: number): Promise<boolean>;
+  getFollowers(userId: number): Promise<User[]>;
+  getFollowing(userId: number): Promise<User[]>;
+
+  // Notifications
+  getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string; fromUserAvatar?: string }>>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(notificationId: number): Promise<void>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -291,6 +310,82 @@ export class DatabaseStorage implements IStorage {
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
     const [message] = await db.insert(chatMessages).values(insertMessage).returning();
     return message;
+  }
+
+  // Follows
+  async followUser(followerId: number, followingId: number): Promise<Follow> {
+    const [follow] = await db.insert(follows).values({ followerId, followingId }).returning();
+    return follow;
+  }
+
+  async unfollowUser(followerId: number, followingId: number): Promise<void> {
+    await db.delete(follows).where(
+      sql`${follows.followerId} = ${followerId} AND ${follows.followingId} = ${followingId}`
+    );
+  }
+
+  async isFollowing(followerId: number, followingId: number): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(follows)
+      .where(
+        sql`${follows.followerId} = ${followerId} AND ${follows.followingId} = ${followingId}`
+      );
+    return !!result;
+  }
+
+  async getFollowers(userId: number): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .innerJoin(follows, eq(follows.followerId, users.id))
+      .where(eq(follows.followingId, userId))
+      .then(results => results.map(r => r.users));
+  }
+
+  async getFollowing(userId: number): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .innerJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(follows.followerId, userId))
+      .then(results => results.map(r => r.users));
+  }
+
+  // Notifications
+  async getNotifications(userId: number): Promise<Array<Notification & { fromUserName?: string; fromUserAvatar?: string }>> {
+    const result = await db
+      .select({
+        id: notifications.id,
+        userId: notifications.userId,
+        fromUserId: notifications.fromUserId,
+        type: notifications.type,
+        battleId: notifications.battleId,
+        message: notifications.message,
+        read: notifications.read,
+        createdAt: notifications.createdAt,
+        fromUserName: users.name,
+        fromUserAvatar: users.avatar,
+      })
+      .from(notifications)
+      .leftJoin(users, eq(notifications.fromUserId, users.id))
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+
+    return result;
+  }
+
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const [notification] = await db.insert(notifications).values(insertNotification).returning();
+    return notification;
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    await db.update(notifications).set({ read: true }).where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await db.update(notifications).set({ read: true }).where(eq(notifications.userId, userId));
   }
 }
 

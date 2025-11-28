@@ -12,6 +12,8 @@ import Producers from "@/pages/Producers";
 import Store from "@/pages/Store";
 import Leaderboard from "@/pages/Leaderboard";
 import Profile from "@/pages/Profile";
+import UserProfile from "@/pages/UserProfile";
+import Notifications from "@/pages/Notifications";
 import Settings from "@/pages/Settings";
 import MyBattles from "@/pages/MyBattles";
 
@@ -26,6 +28,8 @@ function Router() {
       <Route path="/store" component={Store} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/profile" component={Profile} />
+      <Route path="/user/:id" component={UserProfile} />
+      <Route path="/notifications" component={Notifications} />
       <Route path="/settings" component={Settings} />
       <Route path="/my-battles" component={MyBattles} />
       <Route component={NotFound} />

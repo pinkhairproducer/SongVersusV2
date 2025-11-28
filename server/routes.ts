@@ -7,6 +7,8 @@ import {
   insertVoteSchema,
   insertCommentSchema,
   insertChatMessageSchema,
+  insertFollowSchema,
+  insertNotificationSchema,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
@@ -89,6 +91,94 @@ export async function registerRoutes(
       res.json(users.map(u => ({ ...u, password: undefined })));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
+  app.post("/api/users/:id/follow", async (req, res) => {
+    try {
+      const followerId = req.body.followerId;
+      const followingId = parseInt(req.params.id);
+
+      const isFollowing = await storage.isFollowing(followerId, followingId);
+      if (isFollowing) {
+        return res.status(400).json({ error: "Already following" });
+      }
+
+      const follow = await storage.followUser(followerId, followingId);
+      const fromUser = await storage.getUser(followerId);
+      
+      await storage.createNotification({
+        userId: followingId,
+        fromUserId: followerId,
+        type: "follow",
+        message: `${fromUser?.name} started following you`,
+      });
+
+      res.json(follow);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to follow user" });
+    }
+  });
+
+  app.post("/api/users/:id/unfollow", async (req, res) => {
+    try {
+      const followerId = req.body.followerId;
+      const followingId = parseInt(req.params.id);
+
+      await storage.unfollowUser(followerId, followingId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unfollow user" });
+    }
+  });
+
+  app.get("/api/users/:id/followers", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const followers = await storage.getFollowers(id);
+      res.json(followers.map(u => ({ ...u, password: undefined })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch followers" });
+    }
+  });
+
+  app.get("/api/users/:id/following", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const following = await storage.getFollowing(id);
+      res.json(following.map(u => ({ ...u, password: undefined })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch following" });
+    }
+  });
+
+  app.get("/api/notifications/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.post("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  app.post("/api/notifications/:userId/read-all", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
     }
   });
 

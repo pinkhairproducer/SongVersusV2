@@ -98,6 +98,56 @@ export async function sendChatMessage(userId: number, text: string): Promise<Cha
   return response.json();
 }
 
+export async function followUser(followerId: number, followingId: number): Promise<void> {
+  const response = await fetch(`/api/users/${followingId}/follow`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ followerId }),
+  });
+  if (!response.ok) throw new Error("Failed to follow user");
+}
+
+export async function unfollowUser(followerId: number, followingId: number): Promise<void> {
+  const response = await fetch(`/api/users/${followingId}/unfollow`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ followerId }),
+  });
+  if (!response.ok) throw new Error("Failed to unfollow user");
+}
+
+export async function getFollowers(userId: number): Promise<User[]> {
+  const response = await fetch(`/api/users/${userId}/followers`);
+  if (!response.ok) throw new Error("Failed to fetch followers");
+  return response.json();
+}
+
+export async function getFollowing(userId: number): Promise<User[]> {
+  const response = await fetch(`/api/users/${userId}/following`);
+  if (!response.ok) throw new Error("Failed to fetch following");
+  return response.json();
+}
+
+export async function getNotifications(userId: number): Promise<any[]> {
+  const response = await fetch(`/api/notifications/${userId}`);
+  if (!response.ok) throw new Error("Failed to fetch notifications");
+  return response.json();
+}
+
+export async function markNotificationAsRead(notificationId: number): Promise<void> {
+  const response = await fetch(`/api/notifications/${notificationId}/read`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to mark notification as read");
+}
+
+export async function markAllNotificationsAsRead(userId: number): Promise<void> {
+  const response = await fetch(`/api/notifications/${userId}/read-all`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to mark all notifications as read");
+}
+
 export interface StripeProduct {
   id: string;
   name: string;
