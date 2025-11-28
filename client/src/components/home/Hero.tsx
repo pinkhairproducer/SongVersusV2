@@ -5,12 +5,12 @@ import heroBg from "@assets/generated_images/dark_cinematic_music_studio_backgro
 
 export function Hero() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-x-clip overflow-y-visible pt-16">
+    <div className="relative min-h-screen flex flex-col items-center justify-center pt-16">
       {/* Cyber Grid Background */}
-      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none"></div>
+      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none overflow-x-hidden"></div>
       
       {/* Gradient Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 overflow-x-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-sv-black via-sv-black/90 to-sv-black z-10" />
         <img 
           src={heroBg} 
@@ -24,7 +24,7 @@ export function Hero() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sv-purple/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"></div>
 
       {/* Animated Waveform - Top Level */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-48 opacity-30 pointer-events-none z-5">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-48 opacity-30 pointer-events-none z-5" style={{ overflow: 'visible' }}>
         <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-1">
           <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" className="animate-pulse">
             <animate attributeName="d" dur="3s" repeatCount="indefinite"
