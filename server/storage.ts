@@ -6,6 +6,7 @@ import {
   chatMessages,
   follows,
   notifications,
+  messages,
   type User,
   type UpsertUser,
   type Battle,
@@ -20,6 +21,8 @@ import {
   type InsertFollow,
   type Notification,
   type InsertNotification,
+  type Message,
+  type InsertMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -83,6 +86,13 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: number): Promise<void>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+
+  getMessages(userId: number): Promise<Array<Message & { fromUserName?: string | null; fromUserAvatar?: string | null }>>;
+  getSentMessages(userId: number): Promise<Array<Message & { toUserName?: string | null; toUserAvatar?: string | null }>>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessageAsRead(messageId: number): Promise<void>;
+  getUnreadMessageCount(userId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -412,6 +422,73 @@ export class DatabaseStorage implements IStorage {
 
   async markAllNotificationsAsRead(userId: number): Promise<void> {
     await db.update(notifications).set({ read: true }).where(eq(notifications.userId, userId));
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(sql`${notifications.userId} = ${userId} AND ${notifications.read} = false`);
+    return result[0]?.count || 0;
+  }
+
+  async getMessages(userId: number): Promise<Array<Message & { fromUserName?: string | null; fromUserAvatar?: string | null }>> {
+    const result = await db
+      .select({
+        id: messages.id,
+        fromUserId: messages.fromUserId,
+        toUserId: messages.toUserId,
+        subject: messages.subject,
+        content: messages.content,
+        read: messages.read,
+        createdAt: messages.createdAt,
+        fromUserName: users.name,
+        fromUserAvatar: users.profileImageUrl,
+      })
+      .from(messages)
+      .leftJoin(users, eq(messages.fromUserId, users.id))
+      .where(eq(messages.toUserId, userId))
+      .orderBy(desc(messages.createdAt));
+
+    return result;
+  }
+
+  async getSentMessages(userId: number): Promise<Array<Message & { toUserName?: string | null; toUserAvatar?: string | null }>> {
+    const result = await db
+      .select({
+        id: messages.id,
+        fromUserId: messages.fromUserId,
+        toUserId: messages.toUserId,
+        subject: messages.subject,
+        content: messages.content,
+        read: messages.read,
+        createdAt: messages.createdAt,
+        toUserName: users.name,
+        toUserAvatar: users.profileImageUrl,
+      })
+      .from(messages)
+      .leftJoin(users, eq(messages.toUserId, users.id))
+      .where(eq(messages.fromUserId, userId))
+      .orderBy(desc(messages.createdAt));
+
+    return result;
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const [message] = await db.insert(messages).values(insertMessage).returning();
+    return message;
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    await db.update(messages).set({ read: true }).where(eq(messages.id, messageId));
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(messages)
+      .where(sql`${messages.toUserId} = ${userId} AND ${messages.read} = false`);
+    return result[0]?.count || 0;
   }
 }
 
