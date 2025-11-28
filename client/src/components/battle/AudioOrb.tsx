@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 interface AudioOrbProps {
   isPlaying?: boolean;
-  color?: "violet" | "fuchsia" | "blue" | "green";
+  color?: "violet" | "fuchsia" | "blue" | "green" | "pink" | "purple";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -56,6 +56,18 @@ export function AudioOrb({
       glow: "shadow-green-500/50",
       ring: "border-green-500/30",
       pulse: "bg-green-500",
+    },
+    pink: {
+      primary: "from-[#FF2EC3] to-[#ff6ed8]",
+      glow: "shadow-[#FF2EC3]/50",
+      ring: "border-[#FF2EC3]/30",
+      pulse: "bg-[#FF2EC3]",
+    },
+    purple: {
+      primary: "from-[#A64BFF] to-[#c78fff]",
+      glow: "shadow-[#A64BFF]/50",
+      ring: "border-[#A64BFF]/30",
+      pulse: "bg-[#A64BFF]",
     },
   };
 

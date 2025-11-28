@@ -2,8 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
 import { BattleCard } from "@/components/battle/BattleCard";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Trophy, Crown } from "lucide-react";
 import { Link } from "wouter";
 
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
@@ -15,6 +14,7 @@ const FEATURED_BATTLES = [
   {
     id: 1,
     timeLeft: "04:23:12",
+    type: "beat",
     left: {
       artist: "Neon Pulse",
       track: "Cyber Night",
@@ -32,6 +32,7 @@ const FEATURED_BATTLES = [
   {
     id: 2,
     timeLeft: "01:15:00",
+    type: "song",
     left: {
       artist: "Lofi Study Girl",
       track: "Rainy Day",
@@ -49,6 +50,7 @@ const FEATURED_BATTLES = [
   {
     id: 3,
     timeLeft: "12:00:00",
+    type: "beat",
     left: {
       artist: "Synthwave Pro",
       track: "Retro Racer",
@@ -74,63 +76,80 @@ const TOP_ARTISTS = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-sv-black flex flex-col">
       <Navbar />
       
       <main className="flex-grow">
         <Hero />
         
         {/* Trending Battles Section */}
-        <section className="py-20 container mx-auto px-4">
+        <section className="py-20 max-w-7xl mx-auto px-4 relative">
+          {/* Section Header */}
           <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-3xl font-bold font-heading text-white mb-2 flex items-center gap-2">
-                <Zap className="w-6 h-6 text-yellow-400 fill-yellow-400" />
-                Trending Battles
+            <div className="border-l-4 border-sv-pink pl-6">
+              <h2 className="text-3xl font-cyber font-bold text-white mb-2 flex items-center gap-3 uppercase">
+                <Zap className="w-6 h-6 text-sv-gold fill-sv-gold" />
+                Live Battles
               </h2>
-              <p className="text-muted-foreground">The hottest matchups happening right now.</p>
+              <p className="text-gray-500 font-body">The hottest matchups happening right now.</p>
             </div>
-            <Button variant="link" className="text-primary hover:text-primary/80">
-              View All <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            <Link href="/battles">
+              <button className="font-hud font-bold uppercase tracking-widest text-sv-pink hover:text-white transition-colors flex items-center gap-2">
+                View All <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {FEATURED_BATTLES.map((battle) => (
-              <BattleCard key={battle.id} {...battle} />
+              <Link key={battle.id} href={`/battle/${battle.id}`}>
+                <BattleCard {...battle} />
+              </Link>
             ))}
           </div>
         </section>
 
         {/* Top Producers Section (Leaderboard Teaser) */}
-        <section className="py-20 bg-black/20 border-y border-white/5">
-          <div className="container mx-auto px-4">
+        <section className="py-20 bg-sv-dark border-y border-sv-gray relative overflow-hidden">
+          {/* Cyber Grid Background */}
+          <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
-                <h2 className="text-3xl font-bold font-heading text-white mb-6">
-                  Top Producers <br />
-                  <span className="text-muted-foreground">of the Week</span>
-                </h2>
-                <p className="text-muted-foreground mb-8 leading-relaxed">
+                <div className="border-l-4 border-sv-gold pl-6 mb-8">
+                  <h2 className="text-4xl font-cyber font-bold text-white mb-2 uppercase">
+                    Top Legends
+                  </h2>
+                  <p className="text-gray-500 font-hud uppercase tracking-widest">of the Week</p>
+                </div>
+                <p className="text-gray-400 mb-8 leading-relaxed font-body">
                   Climb the ranks by winning battles. Top producers earn exclusive badges, 
                   cash prizes, and features on our social channels.
                 </p>
-                <Button className="bg-white text-black hover:bg-white/90 font-bold">
-                  View Full Leaderboard
-                </Button>
+                <Link href="/leaderboard">
+                  <button className="cyber-btn bg-sv-gold text-black font-cyber font-bold py-3 px-8 uppercase tracking-wider hover:glow-gold">
+                    <span>View Leaderboard</span>
+                  </button>
+                </Link>
               </div>
 
-              <div className="bg-card/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="bg-sv-black border border-sv-gray p-6 relative">
+                <div className="absolute -top-3 -left-3 bg-sv-purple text-white font-bold font-mono text-xs px-2 py-1 rotate-[-5deg] sketch-border">
+                  TOP 5
+                </div>
                 <div className="space-y-4">
                   {TOP_ARTISTS.map((artist) => (
-                    <div key={artist.rank} className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-lg transition-colors group cursor-pointer">
-                      <div className="font-mono font-bold text-muted-foreground w-6 text-center">{artist.rank}</div>
-                      <img src={artist.avatar} alt={artist.name} className="w-10 h-10 rounded-full border border-white/10" />
-                      <div className="flex-grow">
-                        <h4 className="font-bold text-white group-hover:text-primary transition-colors">{artist.name}</h4>
-                        <p className="text-xs text-muted-foreground">{artist.wins} Wins</p>
+                    <div key={artist.rank} className="flex items-center gap-4 p-3 hover:bg-sv-purple/10 border border-transparent hover:border-sv-purple/30 transition-all group cursor-pointer">
+                      <div className={`font-cyber font-bold w-8 text-center ${artist.rank === 1 ? 'text-sv-gold' : artist.rank === 2 ? 'text-gray-300' : artist.rank === 3 ? 'text-amber-600' : 'text-gray-500'}`}>
+                        {artist.rank === 1 ? <Crown className="w-6 h-6 fill-sv-gold text-sv-gold mx-auto" /> : `#${artist.rank}`}
                       </div>
-                      <div className="font-mono text-sm font-medium text-white">{artist.score.toLocaleString()} pts</div>
+                      <img src={artist.avatar} alt={artist.name} className="w-10 h-10 border border-sv-gray" />
+                      <div className="flex-grow">
+                        <h4 className="font-punk text-white group-hover:text-sv-pink transition-colors">{artist.name}</h4>
+                        <p className="text-xs text-gray-500 font-hud uppercase tracking-widest">{artist.wins} Wins</p>
+                      </div>
+                      <div className="font-mono text-sm font-bold text-sv-gold">{artist.score.toLocaleString()}</div>
                     </div>
                   ))}
                 </div>

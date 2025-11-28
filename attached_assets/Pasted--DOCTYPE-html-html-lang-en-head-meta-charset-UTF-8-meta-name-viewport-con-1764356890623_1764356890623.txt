@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SongVersus | Brand Identity & UI System</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Permanent+Marker&family=Rajdhani:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sv: {
+                            black: '#050505',
+                            dark: '#0f0f13',
+                            pink: '#FF2EC3',
+                            purple: '#A64BFF',
+                            gold: '#F6C844',
+                            gray: '#2a2a35',
+                            offwhite: '#e0e0e0'
+                        }
+                    },
+                    fontFamily: {
+                        cyber: ['Orbitron', 'sans-serif'],
+                        hud: ['Rajdhani', 'sans-serif'],
+                        punk: ['Permanent Marker', 'cursive'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'flicker': 'flicker 2s infinite',
+                        'blob': 'blob 7s infinite',
+                        'audio-pulse': 'audio-pulse 0.8s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        flicker: {
+                            '0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100%': {
+                                opacity: '0.99',
+                                filter: 'drop-shadow(0 0 1px rgba(255, 46, 195, 0.7))'
+                            },
+                            '20%, 21.999%, 63%, 63.999%, 65%, 69.999%': {
+                                opacity: '0.4',
+                                filter: 'none'
+                            },
+                        },
+                        blob: {
+                            "0%": { transform: "translate(0px, 0px) scale(1)", borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" },
+                            "33%": { transform: "translate(30px, -50px) scale(1.1)", borderRadius: "30% 60% 70% 40% / 50% 60% 30% 60%" },
+                            "66%": { transform: "translate(-20px, 20px) scale(0.9)", borderRadius: "40% 40% 60% 40% / 40% 30% 50% 60%" },
+                            "100%": { transform: "translate(0px, 0px) scale(1)", borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" }
+                        },
+                        'audio-pulse': {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '0.6' },
+                            '50%': { transform: 'scale(1.15)', opacity: '0.9' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Global Styles & Textures */
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* The Noise Overlay - Essential for Gritty Feel */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f13; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #A64BFF; 
+            border-radius: 4px;
+        }
+
+        /* SVG Filters for "Hand Drawn" wobbly effect */
+        .sketch-border {
+            filter: url(#squiggly-1);
+        }
+        
+        /* Neon Glows */
+        .glow-pink { box-shadow: 0 0 15px rgba(255, 46, 195, 0.5); }
+        .glow-purple { box-shadow: 0 0 15px rgba(166, 75, 255, 0.5); }
+        .glow-gold { box-shadow: 0 0 15px rgba(246, 200, 68, 0.5); }
+        
+        /* Text Outlines */
+        .text-outline {
+            -webkit-text-stroke: 1px #FF2EC3;
+            color: transparent;
+        }
+
+        /* Grid Background */
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(166, 75, 255, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(166, 75, 255, 0.1) 1px, transparent 1px);
+        }
+
+        /* Paper Tear Edge */
+        .torn-paper {
+            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 95% 95%, 90% 90%, 85% 95%, 80% 90%, 75% 95%, 70% 90%, 65% 95%, 60% 90%, 55% 95%, 50% 90%, 45% 95%, 40% 90%, 35% 95%, 30% 90%, 25% 95%, 20% 90%, 15% 95%, 10% 90%, 5% 95%, 0% 90%);
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-sv-pink selection:text-white">
+
+    <!-- Global SVG Filters (Hidden but referenced) -->
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none;">
+        <defs>
+            <filter id="squiggly-1">
+                <feTurbulence baseFrequency="0.02" numOctaves="3" result="noise" seed="0"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+            </filter>
+            <filter id="grunge-text">
+                <feTurbulence baseFrequency="0.5" numOctaves="1" result="noise" />
+                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 5 -2" in="noise" result="coloredNoise" />
+                <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="composite" />
+                <feBlend mode="multiply" in="composite" in2="SourceGraphic" />
+            </filter>
+        </defs>
+    </svg>
+
+    <div class="noise-overlay"></div>
+
+    <!-- Navigation / Mode Switcher -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-sv-black/80 backdrop-blur-md border-b border-sv-gray">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-sv-pink skew-x-[-12deg] flex items-center justify-center border-2 border-white sketch-border">
+                    <span class="font-punk text-black text-xl font-bold -skew-x-[12deg]">S</span>
+                </div>
+                <span class="font-cyber font-bold text-xl tracking-wider text-white">SONG<span class="text-sv-pink">VERSUS</span></span>
+            </div>
+            
+            <div class="hidden md:flex gap-6">
+                <button onclick="scrollToSection('brand')" class="font-hud font-bold uppercase tracking-widest text-sv-pink hover:text-white transition-colors">Brand Identity</button>
+                <button onclick="scrollToSection('ui-landing')" class="font-hud font-bold uppercase tracking-widest text-gray-400 hover:text-sv-pink transition-colors">Landing UI</button>
+                <button onclick="scrollToSection('ui-battle')" class="font-hud font-bold uppercase tracking-widest text-gray-400 hover:text-sv-pink transition-colors">Battle UI</button>
+                <button onclick="scrollToSection('ui-profile')" class="font-hud font-bold uppercase tracking-widest text-gray-400 hover:text-sv-pink transition-colors">Profile</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content Wrapper -->
+    <main class="pt-20 pb-20">
+
+        <!-- SECTION 1: BRAND IDENTITY -->
+        <section id="brand" class="max-w-7xl mx-auto px-4 mb-24">
+            <div class="mb-12 border-l-4 border-sv-gold pl-6">
+                <h1 class="text-5xl md:text-7xl font-cyber font-black text-white mb-2 uppercase">Brand <span class="text-transparent bg-clip-text bg-gradient-to-r from-sv-pink to-sv-purple sketch-border">Direction</span></h1>
+                <p class="font-punk text-xl text-gray-400 mt-4 rotate-1 inline-block bg-sv-dark p-2 border border-sv-gray">"Cyberpunk Arena meets Garage Band Poster"</p>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-16">
+                <div class="p-6 bg-sv-pink rounded-lg glow-pink relative overflow-hidden group">
+                    <span class="font-cyber font-bold text-black text-xl">NEON PINK</span>
+                    <span class="block font-mono text-black/70">#FF2EC3</span>
+                    <div class="absolute bottom-[-20px] right-[-20px] text-black/20 font-punk text-6xl group-hover:rotate-12 transition-transform">VS</div>
+                </div>
+                <div class="p-6 bg-sv-purple rounded-lg glow-purple">
+                    <span class="font-cyber font-bold text-white text-xl">NEON PURPLE</span>
+                    <span class="block font-mono text-white/70">#A64BFF</span>
+                </div>
+                <div class="p-6 bg-sv-gold rounded-lg border-2 border-white glow-gold sketch-border">
+                    <span class="font-cyber font-bold text-black text-xl">LEGEND GOLD</span>
+                    <span class="block font-mono text-black/70">#F6C844</span>
+                </div>
+                <div class="p-6 bg-sv-dark border border-sv-gray relative">
+                    <div class="absolute inset-0 cyber-grid opacity-30"></div>
+                    <span class="font-cyber font-bold text-white text-xl relative z-10">ARENA DARK</span>
+                    <span class="block font-mono text-gray-400 relative z-10">#0F0F13</span>
+                </div>
+                <div class="p-6 bg-gray-600 border-2 border-dashed border-white/50 skew-y-1">
+                    <span class="font-punk font-bold text-white text-xl">GRUNGE GRAY</span>
+                    <span class="block font-mono text-gray-300">#2A2A35</span>
+                </div>
+            </div>
+
+            <!-- Typography System -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                <div>
+                    <h3 class="text-sv-gold font-hud tracking-widest uppercase mb-4 text-xl">Typography System</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <p class="font-cyber text-4xl text-white font-bold">Orbitron Bold</p>
+                            <p class="text-gray-500 font-mono text-sm mt-1">Headings & HUD Elements</p>
+                        </div>
+                        <div>
+                            <p class="font-punk text-3xl text-sv-pink -rotate-1">Permanent Marker</p>
+                            <p class="text-gray-500 font-mono text-sm mt-1">Accents, Usernames, "Graffiti" notes</p>
+                        </div>
+                        <div>
+                            <p class="font-hud text-3xl text-white tracking-widest font-bold">RAJDHANI BOLD</p>
+                            <p class="text-gray-500 font-mono text-sm mt-1">Subheadings & Data Stats</p>
+                        </div>
+                        <div>
+                            <p class="font-body text-lg text-gray-300">Inter Regular. Used for body text, descriptions, and long-form content reading clarity.</p>
+                            <p class="text-gray-500 font-mono text-sm mt-1">Body Copy</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Component Library -->
+                <div>
+                    <h3 class="text-sv-gold font-hud tracking-widest uppercase mb-4 text-xl">Component Library</h3>
+                    <div class="space-y-6 bg-sv-dark p-8 rounded-xl border border-sv-gray relative overflow-hidden">
+                        
+                        <!-- Primary Button -->
+                        <div class="flex items-center gap-4">
+                            <button class="relative bg-sv-pink text-black font-cyber font-bold py-3 px-8 uppercase tracking-wider hover:bg-white hover:glow-pink transition-all skew-x-[-12deg] group">
+                                <span class="block skew-x-[12deg]">Join Battle</span>
+                                <div class="absolute -top-1 -right-1 w-2 h-2 bg-white"></div>
+                                <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-white"></div>
+                            </button>
+                            <span class="text-xs font-mono text-gray-500">Primary CTA (Cyber)</span>
+                        </div>
+
+                        <!-- Secondary Button -->
+                        <div class="flex items-center gap-4">
+                            <button class="font-punk text-sv-pink border-2 border-sv-pink py-2 px-6 rotate-1 hover:-rotate-1 hover:bg-sv-pink/10 transition-all sketch-border">
+                                Upload Track
+                            </button>
+                            <span class="text-xs font-mono text-gray-500">Secondary (Sketch)</span>
+                        </div>
+
+                        <!-- Card Style -->
+                        <div class="p-4 bg-black border border-sv-purple/50 relative">
+                            <div class="absolute -top-3 -left-3 bg-sv-purple text-black font-bold font-mono text-xs px-2 py-1 rotate-[-5deg] sketch-border">NEW</div>
+                            <h4 class="font-cyber text-white">Feature Card</h4>
+                            <p class="font-body text-sm text-gray-400 mt-1">Cyber-grid background with neon borders.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logo Concepts -->
+            <div class="mb-16">
+                <h3 class="text-sv-gold font-hud tracking-widest uppercase mb-6 text-xl">Logo Concepts</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Concept 1: Wordmark Hybrid -->
+                    <div class="bg-black border border-sv-gray p-8 flex items-center justify-center">
+                        <div class="flex flex-col items-center">
+                            <h2 class="text-4xl font-cyber font-black tracking-tighter text-white uppercase italic">
+                                SONG<span class="text-transparent bg-clip-text bg-gradient-to-r from-sv-pink to-sv-purple">VS</span>
+                            </h2>
+                            <div class="w-full h-1 bg-sv-pink mt-1 sketch-border"></div>
+                        </div>
+                    </div>
+
+                    <!-- Concept 2: The Monogram -->
+                    <div class="bg-black border border-sv-gray p-8 flex items-center justify-center">
+                        <div class="relative w-20 h-20 flex items-center justify-center">
+                            <div class="absolute inset-0 border-4 border-sv-purple skew-x-[-12deg] glow-purple"></div>
+                            <span class="font-punk text-5xl text-sv-pink z-10 rotate-3 drop-shadow-[2px_2px_0_rgba(255,255,255,1)]">S</span>
+                            <span class="font-punk text-5xl text-white z-0 -ml-4 -rotate-6 opacity-70">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Concept 3: The Sticker -->
+                    <div class="bg-black border border-sv-gray p-8 flex items-center justify-center">
+                        <div class="bg-sv-gold p-4 rotate-3 sketch-border shadow-lg relative">
+                            <div class="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
+                            <span class="font-cyber font-bold text-black text-2xl">VS</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: LANDING PAGE MOCKUP -->
+        <section id="ui-landing" class="relative w-full bg-sv-black overflow-hidden py-24 border-t border-sv-gray">
+            
+            <!-- Cyber Grid BG -->
+            <div class="absolute inset-0 cyber-grid opacity-20 pointer-events-none"></div>
+            
+            <!-- Hero Content -->
+            <div class="relative z-10 max-w-5xl mx-auto px-4 text-center">
+                
+                <!-- Main Title -->
+                <div class="relative inline-block mb-8">
+                    <h1 class="text-6xl md:text-9xl font-cyber font-black text-white leading-none relative z-10 mix-blend-screen">
+                        SONG<br>
+                        <span class="text-sv-pink text-outline md:text-sv-pink md:text-opacity-100">VERSUS</span>
+                    </h1>
+                    <!-- Graffiti Overlay -->
+                    <span class="absolute top-0 -right-8 md:-right-16 text-2xl md:text-4xl font-punk text-sv-gold rotate-12 bg-black px-2 sketch-border">
+                        SEASON 3
+                    </span>
+                    <!-- Animated Waveform behind -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-32 opacity-30 pointer-events-none">
+                        <svg viewBox="0 0 100 20" preserveAspectRatio="none" class="w-full h-full fill-none stroke-sv-purple stroke-[0.5]">
+                            <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" class="animate-pulse">
+                                <animate attributeName="d" dur="3s" repeatCount="indefinite"
+                                    values="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10;
+                                            M0,10 Q10,0 20,10 T40,20 T60,5 T80,15 T100,10;
+                                            M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" />
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+
+                <p class="font-body text-xl text-gray-400 max-w-2xl mx-auto mb-12">
+                    The underground arena where <span class="text-white font-bold">Artists</span> and <span class="text-white font-bold">Producers</span> clash. 
+                    Drop tracks. Win <span class="text-sv-gold">ORBs</span>. Become Legend.
+                </p>
+
+                <!-- CTAs -->
+                <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
+                    <button class="group relative px-8 py-4 bg-sv-pink text-black font-cyber font-bold text-xl uppercase tracking-wider skew-x-[-12deg] hover:glow-pink transition-all">
+                        <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                        <span class="block skew-x-[12deg] flex items-center gap-2">
+                            Start Battle <i data-lucide="zap" class="w-5 h-5 fill-black"></i>
+                        </span>
+                    </button>
+                    <button class="font-punk text-white text-xl border-b-2 border-sv-purple hover:text-sv-purple transition-colors rotate-2">
+                        Watch Top Battles
+                    </button>
+                </div>
+            </div>
+
+            <!-- Role Selection Cards -->
+            <div class="max-w-6xl mx-auto px-4 mt-24">
+                <h3 class="text-center font-hud text-sv-gold tracking-[0.5em] mb-12 uppercase">Choose Your Class</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- Artist Card -->
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute inset-0 bg-sv-pink/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="bg-sv-dark border border-sv-gray p-8 h-96 relative overflow-hidden flex flex-col items-center justify-end group-hover:border-sv-pink transition-colors">
+                            <!-- Background Art Placeholder -->
+                            <div class="absolute inset-0 opacity-30 flex items-center justify-center">
+                                <i data-lucide="mic-2" class="w-64 h-64 text-sv-pink stroke-[1px] sketch-border group-hover:scale-110 transition-transform duration-500"></i>
+                            </div>
+                            
+                            <div class="relative z-10 text-center">
+                                <h2 class="text-5xl font-punk text-white mb-2 group-hover:text-sv-pink transition-colors text-outline">ARTIST</h2>
+                                <p class="font-hud text-gray-400 tracking-widest text-sm bg-black/80 px-2 py-1">VOCALS • RAP • LYRICS</p>
+                            </div>
+
+                            <!-- Hover Overlay -->
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="bg-sv-pink text-black font-bold font-mono text-xs px-2 py-1 rotate-3">SELECT</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Producer Card -->
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute inset-0 bg-sv-purple/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="bg-sv-dark border border-sv-gray p-8 h-96 relative overflow-hidden flex flex-col items-center justify-end group-hover:border-sv-purple transition-colors">
+                            <!-- Background Art Placeholder -->
+                            <div class="absolute inset-0 opacity-30 flex items-center justify-center">
+                                <i data-lucide="disc-3" class="w-64 h-64 text-sv-purple stroke-[1px] sketch-border group-hover:scale-110 transition-transform duration-500"></i>
+                            </div>
+                            
+                            <div class="relative z-10 text-center">
+                                <h2 class="text-5xl font-punk text-white mb-2 group-hover:text-sv-purple transition-colors text-outline">PRODUCER</h2>
+                                <p class="font-hud text-gray-400 tracking-widest text-sm bg-black/80 px-2 py-1">BEATS • LOOPS • MIX</p>
+                            </div>
+
+                             <!-- Hover Overlay -->
+                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="bg-sv-purple text-white font-bold font-mono text-xs px-2 py-1 -rotate-2">SELECT</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: BATTLE UI -->
+        <section id="ui-battle" class="py-24 bg-black relative">
+            <div class="max-w-7xl mx-auto px-2 md:px-4">
+                
+                <!-- Matchup Header -->
+                <div class="flex justify-between items-end mb-4 px-4 border-b border-sv-gray pb-4">
+                    <div class="text-left">
+                        <span class="block text-sv-gold font-hud text-sm tracking-widest">LIVE BATTLE</span>
+                        <span class="font-cyber text-2xl text-white">ROUND 2</span>
+                    </div>
+                    <div class="text-center animate-pulse-fast">
+                         <span class="bg-red-600 text-white font-mono font-bold px-2 py-1 text-xs rounded">RECORDING</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-gray-500 font-hud text-sm">TIME REMAINING</span>
+                        <span class="font-mono text-2xl text-sv-pink font-bold">04:21</span>
+                    </div>
+                </div>
+
+                <!-- Battle Split Screen -->
+                <div class="flex flex-col md:flex-row h-[600px] border-y-4 border-sv-dark relative">
+                    
+                    <!-- Left Side: Artist -->
+                    <div class="flex-1 bg-sv-dark relative overflow-hidden group border-r border-sv-gray/30">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                        
+                        <!-- Fluid Audio Orb (Artist - Pink) -->
+                        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 pointer-events-none">
+                            <div class="absolute inset-0 bg-sv-pink mix-blend-screen opacity-60 filter blur-xl animate-blob"></div>
+                            <div class="absolute inset-0 bg-purple-500 mix-blend-overlay opacity-40 filter blur-2xl animate-blob" style="animation-delay: 2s"></div>
+                            <!-- Core Reacting to Audio -->
+                            <div class="absolute inset-12 bg-white/30 rounded-full blur-md animate-audio-pulse"></div>
+                        </div>
+
+                        <!-- Player HUD -->
+                        <div class="absolute bottom-0 left-0 w-full p-6 relative z-10">
+                            <div class="flex items-end justify-between">
+                                <div>
+                                    <h2 class="text-4xl font-punk text-white drop-shadow-md -rotate-1 mb-1">RUCKUS_MC</h2>
+                                    <div class="flex gap-2">
+                                        <span class="bg-sv-pink text-black text-xs font-bold px-2 py-0.5 font-cyber">LVL 42</span>
+                                        <span class="bg-black/50 border border-white/20 text-white text-xs px-2 py-0.5 font-mono">Chicago</span>
+                                    </div>
+                                </div>
+                                <button class="bg-sv-pink hover:bg-white text-black font-cyber font-bold p-3 rounded-full glow-pink transition-all transform hover:scale-110">
+                                    <i data-lucide="thumbs-up" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                            <!-- Score Bar -->
+                            <div class="w-full bg-gray-800 h-2 mt-4 rounded-full overflow-hidden border border-gray-600">
+                                <div class="h-full bg-sv-pink w-[65%] relative">
+                                    <div class="absolute right-0 top-0 bottom-0 w-1 bg-white animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VS Divider (Absolute Center) -->
+                    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-24 h-24 flex items-center justify-center">
+                        <div class="absolute inset-0 bg-black rotate-45 border-4 border-white shadow-2xl"></div>
+                        <div class="relative z-10 font-cyber font-black text-3xl text-white italic -skew-x-12">VS</div>
+                    </div>
+
+                    <!-- Center Visualization Overlay (Simulated) -->
+                    <div class="absolute inset-0 pointer-events-none z-10 flex items-center justify-center opacity-30 mix-blend-screen">
+                        <div class="flex items-end gap-1 h-32">
+                            <div class="w-4 bg-sv-pink h-12 animate-[float_0.5s_ease-in-out_infinite]"></div>
+                            <div class="w-4 bg-sv-purple h-24 animate-[float_0.7s_ease-in-out_infinite]"></div>
+                            <div class="w-4 bg-sv-gold h-16 animate-[float_0.6s_ease-in-out_infinite]"></div>
+                            <div class="w-4 bg-sv-pink h-28 animate-[float_0.4s_ease-in-out_infinite]"></div>
+                            <div class="w-4 bg-sv-purple h-10 animate-[float_0.8s_ease-in-out_infinite]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Producer -->
+                    <div class="flex-1 bg-sv-dark relative overflow-hidden group border-l border-sv-gray/30">
+                        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                        
+                        <!-- Fluid Audio Orb (Producer - Purple) -->
+                        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 pointer-events-none">
+                            <div class="absolute inset-0 bg-sv-purple mix-blend-screen opacity-60 filter blur-xl animate-blob"></div>
+                            <div class="absolute inset-0 bg-indigo-500 mix-blend-overlay opacity-40 filter blur-2xl animate-blob" style="animation-delay: 4s"></div>
+                            <!-- Core Reacting to Audio -->
+                            <div class="absolute inset-12 bg-white/30 rounded-full blur-md animate-audio-pulse" style="animation-delay: 0.2s"></div>
+                        </div>
+
+                        <!-- Player HUD -->
+                        <div class="absolute bottom-0 left-0 w-full p-6 text-right relative z-10">
+                            <div class="flex items-end justify-between flex-row-reverse">
+                                <div>
+                                    <h2 class="text-4xl font-punk text-white drop-shadow-md rotate-1 mb-1">BEAT_GOD</h2>
+                                    <div class="flex gap-2 justify-end">
+                                        <span class="bg-sv-purple text-white text-xs font-bold px-2 py-0.5 font-cyber">LVL 55</span>
+                                        <span class="bg-black/50 border border-white/20 text-white text-xs px-2 py-0.5 font-mono">Tokyo</span>
+                                    </div>
+                                </div>
+                                <button class="bg-sv-purple hover:bg-white text-black font-cyber font-bold p-3 rounded-full glow-purple transition-all transform hover:scale-110">
+                                    <i data-lucide="thumbs-up" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                            <!-- Score Bar -->
+                            <div class="w-full bg-gray-800 h-2 mt-4 rounded-full overflow-hidden border border-gray-600 flex justify-end">
+                                <div class="h-full bg-sv-purple w-[45%] relative">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-white animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Chat / Feed (Bottom) -->
+                <div class="mt-4 flex gap-4 overflow-x-auto pb-2">
+                    <div class="bg-sv-dark border border-sv-gray p-3 rounded min-w-[200px] flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-gray-600"></div>
+                        <div>
+                            <span class="text-sv-pink font-bold text-xs">NeonUser</span>
+                            <p class="text-xs text-gray-400">That drop was NASTY 🔥</p>
+                        </div>
+                    </div>
+                    <div class="bg-sv-dark border border-sv-gray p-3 rounded min-w-[200px] flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-gray-600"></div>
+                        <div>
+                            <span class="text-sv-gold font-bold text-xs">Prod_Mike</span>
+                            <p class="text-xs text-gray-400">Vote Ruckus for flow</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: PROFILE & ECONOMY -->
+        <section id="ui-profile" class="py-24 bg-sv-dark border-t border-sv-gray torn-paper pb-32">
+            <div class="max-w-4xl mx-auto px-4">
+                
+                <!-- Profile Header -->
+                <div class="flex flex-col md:flex-row gap-8 items-center mb-12">
+                    <!-- Avatar -->
+                    <div class="relative w-40 h-40">
+                        <div class="absolute inset-0 rounded-full border-4 border-sv-gold border-dashed animate-spin-slow"></div>
+                        <div class="absolute inset-2 rounded-full overflow-hidden bg-gray-800 border-2 border-white">
+                            <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=500&auto=format&fit=crop&q=60" class="w-full h-full object-cover filter contrast-125 grayscale hover:grayscale-0 transition-all">
+                        </div>
+                        <div class="absolute bottom-0 right-0 bg-sv-gold text-black font-cyber font-bold text-xs px-2 py-1 rotate-[-5deg] border border-white">LEGEND</div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="text-center md:text-left flex-1">
+                        <h1 class="text-5xl font-punk text-white mb-2">HYPER_KID</h1>
+                        <p class="text-sv-pink font-hud tracking-widest uppercase mb-4">Beatmaker // Synthesist</p>
+                        
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-black/50 p-3 border-l-2 border-sv-purple">
+                                <span class="block text-2xl font-cyber text-white">128</span>
+                                <span class="text-xs text-gray-500 font-mono">BATTLES</span>
+                            </div>
+                            <div class="bg-black/50 p-3 border-l-2 border-sv-pink">
+                                <span class="block text-2xl font-cyber text-white">84</span>
+                                <span class="text-xs text-gray-500 font-mono">WINS</span>
+                            </div>
+                            <div class="bg-black/50 p-3 border-l-2 border-sv-gold">
+                                <span class="block text-2xl font-cyber text-white">12k</span>
+                                <span class="text-xs text-gray-500 font-mono">FANS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ORB Economy & Rewards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Wallet -->
+                    <div class="bg-black border border-sv-gray p-6 relative overflow-hidden group">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-sv-gold/20 rounded-full blur-2xl"></div>
+                        <h3 class="font-hud text-gray-400 tracking-widest mb-4">BALANCE</h3>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-sv-gold to-yellow-700 shadow-[0_0_15px_rgba(246,200,68,0.6)] flex items-center justify-center border-2 border-white/50 sketch-border">
+                                <span class="font-bold text-black text-xl">$</span>
+                            </div>
+                            <div>
+                                <span class="block text-4xl font-cyber text-white">4,250 <span class="text-sv-gold">ORBS</span></span>
+                                <span class="text-xs text-green-500 font-mono">+150 from last battle</span>
+                            </div>
+                        </div>
+                        <button class="mt-6 w-full py-2 border border-sv-gold text-sv-gold font-mono text-sm hover:bg-sv-gold hover:text-black transition-colors">TOP UP WALLET</button>
+                    </div>
+
+                    <!-- Badges / Stickers -->
+                    <div class="bg-gray-900/50 p-6 border-2 border-dashed border-gray-700">
+                        <h3 class="font-hud text-gray-400 tracking-widest mb-4">TROPHY CASE</h3>
+                        <div class="flex flex-wrap gap-4">
+                            <!-- Badge 1 -->
+                            <div class="w-16 h-16 bg-sv-purple rounded-lg flex items-center justify-center rotate-3 border-2 border-white shadow-lg tooltip-trigger group relative" title="Neon King">
+                                <i data-lucide="crown" class="text-white w-8 h-8"></i>
+                            </div>
+                            <!-- Badge 2 -->
+                            <div class="w-16 h-16 bg-sv-pink rounded-full flex items-center justify-center -rotate-6 border-2 border-black sketch-border">
+                                <i data-lucide="zap" class="text-black w-8 h-8"></i>
+                            </div>
+                            <!-- Badge 3 -->
+                            <div class="w-16 h-16 bg-sv-gold rounded-sm flex items-center justify-center rotate-12 border-2 border-white opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
+                                <i data-lucide="lock" class="text-black w-6 h-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-black py-12 text-center border-t border-sv-gray">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                 <div class="w-6 h-6 bg-sv-gray skew-x-[-12deg] flex items-center justify-center border border-white/20">
+                    <span class="font-punk text-white text-xs -skew-x-[12deg]">S</span>
+                </div>
+                <span class="font-cyber text-white">SONGVERSUS</span>
+            </div>
+            <p class="font-mono text-xs text-gray-600">© 2025 PROTOCOL. ALL RIGHTS RESERVED.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Simple Smooth Scroll
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if(element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>

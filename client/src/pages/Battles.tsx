@@ -199,10 +199,10 @@ export default function Battles() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-sv-black flex flex-col">
         <Navbar />
         <main className="flex-grow pt-24 pb-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-sv-pink" />
         </main>
         <Footer />
       </div>
@@ -210,42 +210,47 @@ export default function Battles() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-sv-black flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-24 pb-20">
-        <div className="container mx-auto px-4">
+      <main className="flex-grow pt-24 pb-20 relative">
+        {/* Cyber Grid Background */}
+        <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row items-end md:items-center justify-between gap-6 mb-10">
-            <div>
-              <h1 className="text-4xl font-bold font-heading text-white mb-2">Battle Arena</h1>
-              <p className="text-muted-foreground">Vote for your favorites and help them climb the charts.</p>
+            <div className="border-l-4 border-sv-pink pl-6">
+              <h1 className="text-4xl font-cyber font-bold text-white mb-2 uppercase">Battle Arena</h1>
+              <p className="text-gray-500 font-body">Vote for your favorites and help them climb the charts.</p>
             </div>
             
             <div className="flex items-center gap-2">
-               <Button variant="outline" className="border-white/10 bg-black/20">
-                 <Filter className="w-4 h-4 mr-2" /> Filter
-               </Button>
+               <button className="font-hud font-bold uppercase tracking-widest text-gray-400 hover:text-sv-pink transition-colors flex items-center gap-2 border border-sv-gray px-4 py-2">
+                 <Filter className="w-4 h-4" /> Filter
+               </button>
             </div>
           </div>
 
           {/* Create Battle Area */}
-          <div className="bg-linear-to-r from-violet-500/10 via-fuchsia-500/10 to-violet-500/10 border border-white/10 rounded-2xl p-8 mb-12 text-center relative overflow-hidden">
-             <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)] pointer-events-none" />
+          <div className="bg-sv-dark border border-sv-gray p-8 mb-12 text-center relative overflow-hidden">
+             <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+             <div className="absolute -top-3 -left-3 bg-sv-gold text-black font-bold font-mono text-xs px-2 py-1 rotate-[-5deg] sketch-border z-20">
+               ENTER THE ARENA
+             </div>
              <div className="relative z-10">
-                <h2 className="text-2xl font-bold text-white mb-2">Ready to enter the arena?</h2>
-                <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+                <h2 className="text-2xl font-cyber font-bold text-white mb-2 uppercase">Ready to Battle?</h2>
+                <p className="text-gray-400 mb-6 max-w-lg mx-auto font-body">
                   Challenge another artist or producer to a battle. Winner takes home the pot and climbs the leaderboard.
                 </p>
-                <div className="flex flex-col items-center gap-2">
-                  <Button 
-                    size="lg" 
-                    className="bg-white text-black hover:bg-white/90 font-bold text-lg px-8 rounded-full shadow-xl shadow-white/10"
+                <div className="flex flex-col items-center gap-4">
+                  <button 
+                    className="cyber-btn bg-sv-pink text-black font-cyber font-bold py-4 px-10 uppercase tracking-wider text-lg hover:bg-white hover:glow-pink transition-all"
                     onClick={handleStartBattle}
                     data-testid="button-start-battle"
                   >
-                    Start a New Battle
-                  </Button>
-                  <span className="text-xs text-yellow-400 font-bold flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full border border-white/5">
+                    <span>Start a New Battle</span>
+                  </button>
+                  <span className="text-xs text-sv-gold font-hud font-bold flex items-center gap-1 bg-sv-black px-3 py-1 border border-sv-gold/30 uppercase tracking-widest">
                     <Coins className="w-3 h-3" /> Cost: {BATTLE_COST} Coins
                   </span>
                 </div>
@@ -253,49 +258,52 @@ export default function Battles() {
           </div>
 
           <Tabs defaultValue="open" className="w-full">
-            <TabsList className="bg-black/20 border border-white/10 p-1 rounded-lg mb-8 w-full md:w-auto flex-wrap h-auto">
-              <TabsTrigger value="open" className="flex-1 md:flex-none data-[state=active]:bg-white/10 data-[state=active]:text-white">Open Battles ({openBattles.length})</TabsTrigger>
-              <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-white/10 data-[state=active]:text-white">All Battles ({completeBattles.length})</TabsTrigger>
-              <TabsTrigger value="beats" className="flex-1 md:flex-none data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300">Beat Battles (Producers)</TabsTrigger>
-              <TabsTrigger value="songs" className="flex-1 md:flex-none data-[state=active]:bg-fuchsia-500/20 data-[state=active]:text-fuchsia-300">Song Battles (Artists)</TabsTrigger>
+            <TabsList className="bg-sv-dark border border-sv-gray p-1 mb-8 w-full md:w-auto flex-wrap h-auto">
+              <TabsTrigger value="open" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-gold/20 data-[state=active]:text-sv-gold rounded-none">Open ({openBattles.length})</TabsTrigger>
+              <TabsTrigger value="all" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-pink/20 data-[state=active]:text-sv-pink rounded-none">All ({completeBattles.length})</TabsTrigger>
+              <TabsTrigger value="beats" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-purple/20 data-[state=active]:text-sv-purple rounded-none">Beats</TabsTrigger>
+              <TabsTrigger value="songs" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-pink/20 data-[state=active]:text-sv-pink rounded-none">Songs</TabsTrigger>
             </TabsList>
 
             <TabsContent value="open" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {openBattles.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-muted-foreground">No open battles right now. Start one to get the party going!</p>
+                  <div className="col-span-full text-center py-12 bg-sv-dark border border-sv-gray">
+                    <p className="text-gray-500 font-body">No open battles right now. Start one to get the party going!</p>
                   </div>
                 ) : (
                   openBattles.map((battle) => (
-                    <div key={battle.id} className="relative bg-card/50 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300 group backdrop-blur-sm">
+                    <div key={battle.id} className="relative bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-gold/50 transition-all duration-300 group">
+                      <div className="absolute top-0 right-0 bg-sv-gold text-black font-mono text-xs px-2 py-1 font-bold">
+                        OPEN
+                      </div>
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                          <span className="text-xs font-hud font-bold text-sv-gold uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-2 h-2 bg-sv-gold animate-pulse" />
                             Waiting for Opponent
                           </span>
-                          <span className="text-xs font-mono text-muted-foreground">{battle.timeLeft} Left</span>
+                          <span className="text-xs font-mono text-gray-500">{battle.timeLeft}</span>
                         </div>
                         
                         <div className="relative aspect-square flex items-center justify-center mb-4">
                           <AudioOrb 
                             isPlaying={false} 
-                            color={battle.type === "beat" ? "violet" : "fuchsia"} 
+                            color={battle.type === "beat" ? "purple" : "pink"} 
                             size="lg"
                           />
                         </div>
                         
-                        <h3 className="font-bold text-white truncate text-center">{battle.left.track}</h3>
-                        <p className="text-sm text-muted-foreground truncate mb-4 text-center">{battle.left.artist}</p>
+                        <h3 className="font-punk text-white truncate text-center">{battle.left.track}</h3>
+                        <p className="text-sm text-gray-500 truncate mb-4 text-center font-hud">{battle.left.artist}</p>
                         
-                        <Button
-                          className="w-full bg-green-500 hover:bg-green-600 text-white font-bold"
+                        <button
+                          className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
                           onClick={() => handleJoinBattle(battle.id)}
                           data-testid={`button-join-battle-${battle.id}`}
                         >
-                          Join This Battle ({BATTLE_JOIN_COST} Coins)
-                        </Button>
+                          Join Battle ({BATTLE_JOIN_COST} Coins)
+                        </button>
                       </div>
                     </div>
                   ))
