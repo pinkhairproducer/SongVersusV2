@@ -166,7 +166,7 @@ export default function BattleDetail() {
                 <AudioReactiveSphere 
                   isPlaying={playing === "left"}
                   color="cyan"
-                  size={280}
+                  size={220}
                   className="z-10"
                 />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
@@ -230,7 +230,7 @@ export default function BattleDetail() {
                 <AudioReactiveSphere 
                   isPlaying={playing === "right"}
                   color="fuchsia"
-                  size={280}
+                  size={220}
                   className="z-10"
                 />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
