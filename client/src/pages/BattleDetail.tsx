@@ -161,7 +161,7 @@ export default function BattleDetail() {
 
             {/* Left Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl bg-black/40 flex items-center justify-center overflow-hidden">
+              <div className="relative aspect-square flex items-center justify-center">
                 <AudioReactiveSphere 
                   isPlaying={playing === "left"}
                   color="cyan"
@@ -194,7 +194,7 @@ export default function BattleDetail() {
 
             {/* Right Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl bg-black/40 flex items-center justify-center overflow-hidden">
+              <div className="relative aspect-square flex items-center justify-center">
                 <AudioReactiveSphere 
                   isPlaying={playing === "right"}
                   color="fuchsia"
