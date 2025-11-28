@@ -1,0 +1,498 @@
+Change the UI to something like this: <!DOCTYPE html>
+
+<html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>SongVersus | Digital Grunge UI System</title> <script src="https://cdn.tailwindcss.com"></script> <script src="https://unpkg.com/lucide@latest"></script>
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Permanent+Marker&display=swap" rel="stylesheet">
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'acid-lime': '#ccff00',
+                    'punk-pink': '#ff0066',
+                    'deep-void': '#121212',
+                    'dirty-paper': '#f3f0e6',
+                    'concrete': '#2a2a2a',
+                    'electric-blue': '#00f3ff'
+                },
+                fontFamily: {
+                    'display': ['"Rubik Wet Paint"', 'cursive'],
+                    'mono': ['"Space Mono"', 'monospace'],
+                    'marker': ['"Permanent Marker"', 'cursive'],
+                },
+                boxShadow: {
+                    'hard': '8px 8px 0px 0px rgba(0,0,0,1)',
+                    'hard-sm': '4px 4px 0px 0px rgba(0,0,0,1)',
+                    'hard-lime': '8px 8px 0px 0px #ccff00',
+                    'hard-pink': '8px 8px 0px 0px #ff0066',
+                },
+                animation: {
+                    'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                    'float': 'float 6s ease-in-out infinite',
+                    'glitch': 'glitch 1s linear infinite',
+                    'marquee': 'marquee 20s linear infinite',
+                },
+                keyframes: {
+                    shake: {
+                        '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                        '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                        '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                        '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                    },
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0)' },
+                        '50%': { transform: 'translateY(-10px)' },
+                    },
+                    marquee: {
+                        '0%': { transform: 'translateX(0%)' },
+                        '100%': { transform: 'translateX(-100%)' },
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Custom Distressed Effects */
+    body {
+        background-color: #f3f0e6;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        overflow-x: hidden;
+    }
+
+    .paper-tear {
+        position: relative;
+        clip-path: polygon(0% 0%, 100% 0%, 100% 95%, 95% 100%, 90% 95%, 85% 100%, 80% 95%, 75% 100%, 70% 95%, 65% 100%, 60% 95%, 55% 100%, 50% 95%, 45% 100%, 40% 95%, 35% 100%, 30% 95%, 25% 100%, 20% 95%, 15% 100%, 10% 95%, 5% 100%, 0% 95%);
+    }
+
+    .paper-tear-top {
+         clip-path: polygon(0% 5%, 5% 0%, 10% 5%, 15% 0%, 20% 5%, 25% 0%, 30% 5%, 35% 0%, 40% 5%, 45% 0%, 50% 5%, 55% 0%, 60% 5%, 65% 0%, 70% 5%, 75% 0%, 80% 5%, 85% 0%, 90% 5%, 95% 0%, 100% 5%, 100% 100%, 0% 100%);
+    }
+
+    .glitch-text {
+        position: relative;
+    }
+    
+    .glitch-text::before,
+    .glitch-text::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f3f0e6;
+    }
+    
+    .glitch-text::before {
+        left: 2px;
+        text-shadow: -2px 0 #ff0066;
+        clip: rect(24px, 550px, 90px, 0);
+        animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    }
+    
+    .glitch-text::after {
+        left: -2px;
+        text-shadow: -2px 0 #ccff00;
+        clip: rect(85px, 550px, 140px, 0);
+        animation: glitch-anim 2.5s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim {
+        0% { clip: rect(12px, 9999px, 42px, 0); }
+        20% { clip: rect(84px, 9999px, 12px, 0); }
+        40% { clip: rect(22px, 9999px, 89px, 0); }
+        60% { clip: rect(2px, 9999px, 66px, 0); }
+        80% { clip: rect(55px, 9999px, 14px, 0); }
+        100% { clip: rect(34px, 9999px, 82px, 0); }
+    }
+
+    @keyframes glitch-anim-2 {
+        0% { clip: rect(42px, 9999px, 12px, 0); }
+        20% { clip: rect(14px, 9999px, 52px, 0); }
+        40% { clip: rect(72px, 9999px, 19px, 0); }
+        60% { clip: rect(32px, 9999px, 66px, 0); }
+        80% { clip: rect(5px, 9999px, 34px, 0); }
+        100% { clip: rect(64px, 9999px, 22px, 0); }
+    }
+
+    .spray-paint {
+        mask-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Ccircle cx='100' cy='100' r='80' fill='black' filter='url(%23noise)' opacity='0.8'/%3E%3C/svg%3E");
+    }
+
+    /* Tape Effect */
+    .tape {
+        background-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        backdrop-filter: blur(2px);
+        transform: rotate(-2deg);
+        border-left: 1px dashed rgba(0,0,0,0.1);
+        border-right: 1px dashed rgba(0,0,0,0.1);
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+</head> <body class="text-deep-void font-mono selection:bg-punk-pink selection:text-white">
+<!-- MARQUEE BANNER -->
+<div class="bg-deep-void text-acid-lime overflow-hidden py-2 border-b-4 border-black z-50 relative">
+    <div class="whitespace-nowrap animate-marquee font-display text-xl tracking-widest">
+        SONG VERSUS /// WELCOME TO THE JUNGLE /// DROP BEATS NOT BOMBS /// VOTE OR DIE /// NEW CHALLENGER APPROACHING /// 
+        SONG VERSUS /// WELCOME TO THE JUNGLE /// DROP BEATS NOT BOMBS /// VOTE OR DIE /// NEW CHALLENGER APPROACHING /// 
+    </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="fixed top-0 left-0 h-screen w-20 flex flex-col justify-between py-8 z-40 hidden md:flex mix-blend-hard-light pointer-events-none">
+    <div class="transform -rotate-90 origin-center translate-y-20 pointer-events-auto">
+        <h1 class="font-display text-4xl text-deep-void hover:text-punk-pink cursor-pointer transition-colors">SV_0.1</h1>
+    </div>
+    <div class="flex flex-col items-center gap-8 pointer-events-auto">
+        <button class="group relative">
+            <div class="absolute -inset-2 bg-punk-pink rounded-full blur opacity-0 group-hover:opacity-75 transition"></div>
+            <i data-lucide="radio" class="w-8 h-8 relative z-10 text-deep-void group-hover:text-white transition-colors"></i>
+        </button>
+        <button class="group relative">
+            <div class="absolute -inset-2 bg-acid-lime rounded-full blur opacity-0 group-hover:opacity-75 transition"></div>
+            <i data-lucide="swords" class="w-8 h-8 relative z-10 text-deep-void group-hover:text-black transition-colors"></i>
+        </button>
+        <button class="group relative">
+            <div class="absolute -inset-2 bg-electric-blue rounded-full blur opacity-0 group-hover:opacity-75 transition"></div>
+            <i data-lucide="skull" class="w-8 h-8 relative z-10 text-deep-void group-hover:text-white transition-colors"></i>
+        </button>
+    </div>
+    <div class="transform -rotate-90 origin-center -translate-y-20 pointer-events-auto">
+        <span class="font-marker text-sm">EST. 2025</span>
+    </div>
+</nav>
+
+<div class="md:ml-20 p-4 md:p-12">
+
+    <!-- HEADER / INTRO -->
+    <header class="mb-20 relative">
+        <div class="absolute top-0 right-0 -z-10 opacity-20 pointer-events-none">
+            <svg width="400" height="400" viewBox="0 0 100 100">
+                <path d="M10,50 Q25,25 50,50 T90,50" fill="none" stroke="#000" stroke-width="2" />
+                <circle cx="20" cy="20" r="5" fill="#ff0066" />
+                <rect x="70" y="70" width="20" height="20" fill="#ccff00" transform="rotate(15)" />
+            </svg>
+        </div>
+
+        <div class="inline-block relative mb-6">
+            <div class="absolute -inset-1 bg-acid-lime transform rotate-2 skew-x-6"></div>
+            <h2 class="relative font-marker text-sm md:text-base px-2 py-1 border-2 border-black font-bold">SYSTEM UI // v1.0</h2>
+        </div>
+        
+        <h1 class="font-display text-6xl md:text-9xl mb-4 leading-[0.8] glitch-text" data-text="SONG VERSUS">SONG VERSUS</h1>
+        <p class="font-mono text-xl md:text-2xl max-w-2xl border-l-4 border-punk-pink pl-6 py-2 bg-white/50 backdrop-blur-sm">
+            A competitive auditory battleground. <br>
+            <span class="text-gray-500 text-base">// Stylescape: Digital Grunge, Sticker-Bomb, Anti-Design.</span>
+        </p>
+    </header>
+
+    <!-- SECTION 1: PALETTE & TYPOGRAPHY -->
+    <section class="mb-24 grid grid-cols-1 lg:grid-cols-2 gap-12">
+        
+        <!-- Colors -->
+        <div class="bg-white border-4 border-black shadow-hard p-6 transform -rotate-1">
+            <div class="absolute -top-4 -left-4 w-32 h-8 bg-[#e0e0e0] tape z-10"></div>
+            <h3 class="font-display text-3xl mb-6 flex items-center gap-2">
+                <span class="w-4 h-4 bg-punk-pink rounded-full inline-block"></span>
+                TOXIC PALETTE
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-acid-lime border-2 border-black flex flex-col justify-between h-32 group hover:shadow-hard-sm transition-all cursor-crosshair">
+                    <span class="font-bold">ACID LIME</span>
+                    <span class="font-mono text-xs">#CCFF00</span>
+                </div>
+                <div class="p-4 bg-punk-pink border-2 border-black flex flex-col justify-between h-32 text-white group hover:shadow-hard-sm transition-all cursor-crosshair">
+                    <span class="font-bold">PUNK PINK</span>
+                    <span class="font-mono text-xs">#FF0066</span>
+                </div>
+                <div class="p-4 bg-deep-void border-2 border-black flex flex-col justify-between h-32 text-white group hover:shadow-hard-sm transition-all cursor-crosshair">
+                    <span class="font-bold">DEEP VOID</span>
+                    <span class="font-mono text-xs">#121212</span>
+                </div>
+                <div class="p-4 bg-electric-blue border-2 border-black flex flex-col justify-between h-32 group hover:shadow-hard-sm transition-all cursor-crosshair">
+                    <span class="font-bold">ELEC BLUE</span>
+                    <span class="font-mono text-xs">#00F3FF</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="relative">
+            <div class="absolute -top-6 -right-6 w-24 h-24 bg-acid-lime rounded-full flex items-center justify-center border-2 border-black transform rotate-12 z-10 shadow-hard-pink">
+                <span class="font-display text-xl text-center leading-none transform -rotate-12">FONTS<br>ONLY</span>
+            </div>
+            <div class="space-y-8">
+                <div>
+                    <p class="font-mono text-xs text-gray-500 mb-1">DISPLAY HEADING // RUBIK WET PAINT</p>
+                    <p class="font-display text-5xl md:text-6xl leading-none">THE QUICK BROWN FOX JUMPS THE BEAT.</p>
+                </div>
+                <div>
+                    <p class="font-mono text-xs text-gray-500 mb-1">ACCENT // PERMANENT MARKER</p>
+                    <p class="font-marker text-3xl text-punk-pink transform -rotate-1">"Chaos is the new melody"</p>
+                </div>
+                <div class="bg-black text-acid-lime p-4 border-2 border-acid-lime shadow-hard">
+                    <p class="font-mono text-xs text-gray-500 mb-1 opacity-50">UI MONOSPACE // SPACE MONO</p>
+                    <p class="font-mono text-sm md:text-base">
+                        track_id: 4829<br>
+                        bpm: 140<br>
+                        status: <span class="animate-pulse bg-punk-pink text-white px-1">CRITICAL</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: COMPONENT LIBRARY -->
+    <section class="mb-32">
+        <div class="flex items-center gap-4 mb-12">
+            <h2 class="font-display text-5xl">THE ARMORY</h2>
+            <div class="h-1 flex-grow bg-black"></div>
+            <i data-lucide="bomb" class="w-12 h-12"></i>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
+            
+            <!-- Buttons -->
+            <div class="space-y-6 flex flex-col items-start">
+                <h4 class="font-marker text-xl border-b-2 border-punk-pink inline-block">INTERACTABLES</h4>
+                
+                <button class="relative px-8 py-3 bg-acid-lime border-2 border-black font-bold text-lg shadow-hard hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all duration-200">
+                    PRIMARY ACTION
+                </button>
+
+                <button class="relative px-8 py-3 bg-deep-void text-white border-2 border-transparent hover:border-acid-lime font-mono text-sm tracking-wider group overflow-hidden">
+                    <span class="relative z-10 group-hover:text-acid-lime transition-colors">SECONDARY_BTN</span>
+                    <div class="absolute inset-0 bg-white/10 transform translate-y-full group-hover:translate-y-0 transition-transform duration-200"></div>
+                </button>
+
+                <button class="w-16 h-16 rounded-full bg-punk-pink border-2 border-black flex items-center justify-center shadow-hard hover:animate-shake">
+                    <i data-lucide="play" class="w-8 h-8 text-white fill-current"></i>
+                </button>
+            </div>
+
+            <!-- Cards -->
+            <div class="col-span-1 md:col-span-2 relative">
+                <div class="bg-white border-4 border-black p-2 paper-tear shadow-hard transform rotate-1">
+                    <div class="bg-concrete p-6 relative overflow-hidden min-h-[200px] flex flex-col justify-between group">
+                        <!-- Image placeholder -->
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-acid-lime rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                        
+                        <div class="flex justify-between items-start relative z-10">
+                            <span class="bg-punk-pink text-white px-2 py-1 font-mono text-xs font-bold border border-black transform -rotate-2">
+                                LIVE BATTLE
+                            </span>
+                            <i data-lucide="music" class="text-white w-6 h-6 opacity-50"></i>
+                        </div>
+
+                        <div class="relative z-10 mt-8">
+                            <h3 class="text-white font-display text-4xl mb-2">GORILLAZ VS DAFT PUNK</h3>
+                            <div class="w-full bg-black h-2 rounded-full overflow-hidden border border-white/20">
+                                <div class="h-full bg-acid-lime w-3/4"></div>
+                            </div>
+                            <div class="flex justify-between text-white/60 font-mono text-xs mt-2">
+                                <span>75% VOTES</span>
+                                <span>12:04 REMAINING</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Sticker decoration -->
+                <div class="absolute -bottom-6 -right-4 bg-yellow-400 text-black font-marker p-3 rounded-full border-2 border-black transform rotate-12 shadow-md w-24 h-24 flex items-center justify-center text-center leading-none z-20">
+                    HOT<br>DROP!
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: LIVE INTERFACE DEMO -->
+    <section class="relative bg-deep-void -mx-4 md:-mx-12 p-4 md:p-12 overflow-hidden min-h-screen flex items-center justify-center" id="demo">
+        
+        <!-- Background Grid -->
+        <div class="absolute inset-0 opacity-10 pointer-events-none" 
+             style="background-image: linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px); background-size: 40px 40px;">
+        </div>
+
+        <div class="max-w-6xl w-full relative z-10">
+            
+            <!-- Battle Header -->
+            <div class="text-center mb-16">
+                <div class="inline-block bg-punk-pink text-white font-mono px-4 py-1 transform -rotate-2 border-2 border-white mb-4">
+                    /// ARENA 01 ///
+                </div>
+                <h2 class="font-display text-6xl md:text-8xl text-white tracking-wide">
+                    VERSUS<span class="text-acid-lime">MODE</span>
+                </h2>
+            </div>
+
+            <!-- The Battle Arena -->
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0 relative">
+                
+                <!-- VS BADGE (Center) -->
+                <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 hidden md:block">
+                     <div class="w-32 h-32 bg-white border-4 border-black flex items-center justify-center transform rotate-45 shadow-[0_0_30px_rgba(204,255,0,0.5)]">
+                         <span class="font-display text-5xl transform -rotate-45">VS</span>
+                     </div>
+                </div>
+
+                <!-- Card 1 (Left) -->
+                <div class="w-full md:w-1/2 max-w-md transform md:-rotate-3 md:hover:rotate-0 transition-transform duration-300 z-10">
+                    <div class="bg-[#f0f0f0] border-4 border-black p-2 pb-8 shadow-hard-lime relative">
+                        <!-- Tape -->
+                        <div class="absolute -top-3 left-1/2 w-24 h-8 bg-[#ffffff80] tape transform -translate-x-1/2"></div>
+                        
+                        <!-- Art -->
+                        <div class="bg-black h-64 w-full mb-4 relative overflow-hidden group cursor-pointer border-b-2 border-black">
+                            <img src="https://placehold.co/600x600/121212/333333/png?text=SAMPLE+A" alt="Cover Art" class="w-full h-full object-cover mix-blend-luminosity group-hover:mix-blend-normal transition-all">
+                            <div class="absolute inset-0 bg-acid-lime mix-blend-multiply opacity-0 group-hover:opacity-80 transition-opacity flex items-center justify-center">
+                                <i data-lucide="play-circle" class="w-20 h-20 text-black transform scale-0 group-hover:scale-100 transition-transform duration-300"></i>
+                            </div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="px-4">
+                            <h3 class="font-display text-3xl leading-none mb-1">FEEL GOOD INC.</h3>
+                            <p class="font-mono text-sm text-gray-600 mb-4">Gorillaz // Demon Days</p>
+                            
+                            <!-- Waveform (Fake) -->
+                            <div class="flex items-end justify-between h-12 gap-1 mb-6">
+                                <div class="w-1 bg-black h-4 animate-[pulse_1s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-8 animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-6 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-10 animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-5 animate-[pulse_1.1s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-12 animate-[pulse_1.3s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-3 animate-[pulse_0.9s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-8 animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-6 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-10 animate-[pulse_1.5s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-5 animate-[pulse_1.1s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-12 animate-[pulse_1.3s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-4 animate-[pulse_1s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-8 animate-[pulse_1.2s_ease-in-out_infinite]"></div>
+                                <div class="w-1 bg-black h-6 animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                            </div>
+
+                            <button class="w-full py-3 bg-black text-white font-bold font-mono border-2 border-transparent hover:bg-acid-lime hover:text-black hover:border-black transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="thumbs-up" class="w-4 h-4"></i> VOTE TRACK A
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 (Right) -->
+                <div class="w-full md:w-1/2 max-w-md transform md:rotate-3 md:hover:rotate-0 transition-transform duration-300 z-20 md:ml-[-20px]">
+                    <div class="bg-[#f0f0f0] border-4 border-black p-2 pb-8 shadow-hard-pink relative paper-tear-top">
+                         <!-- Sticker -->
+                         <div class="absolute -top-6 -right-4 z-30 w-20 h-20 bg-electric-blue rounded-full border-2 border-black flex items-center justify-center transform rotate-12 opacity-90">
+                            <i data-lucide="zap" class="w-10 h-10 text-black fill-current"></i>
+                        </div>
+
+                        <!-- Art -->
+                        <div class="bg-black h-64 w-full mb-4 relative overflow-hidden group cursor-pointer border-b-2 border-black">
+                            <img src="https://placehold.co/600x600/2a2a2a/555555/png?text=SAMPLE+B" alt="Cover Art" class="w-full h-full object-cover mix-blend-luminosity group-hover:mix-blend-normal transition-all">
+                            <div class="absolute inset-0 bg-punk-pink mix-blend-multiply opacity-0 group-hover:opacity-80 transition-opacity flex items-center justify-center">
+                                <i data-lucide="play-circle" class="w-20 h-20 text-white transform scale-0 group-hover:scale-100 transition-transform duration-300"></i>
+                            </div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="px-4">
+                            <h3 class="font-display text-3xl leading-none mb-1">CLINT EASTWOOD</h3>
+                            <p class="font-mono text-sm text-gray-600 mb-4">Gorillaz // Gorillaz</p>
+                            
+                            <!-- Waveform (Fake) -->
+                            <div class="flex items-end justify-between h-12 gap-1 mb-6 opacity-50">
+                                <div class="w-1 bg-gray-400 h-3"></div>
+                                <div class="w-1 bg-gray-400 h-5"></div>
+                                <div class="w-1 bg-gray-400 h-2"></div>
+                                <div class="w-1 bg-gray-400 h-8"></div>
+                                <div class="w-1 bg-gray-400 h-4"></div>
+                                <div class="w-1 bg-gray-400 h-6"></div>
+                                <div class="w-1 bg-gray-400 h-3"></div>
+                                <div class="w-1 bg-gray-400 h-5"></div>
+                                <div class="w-1 bg-gray-400 h-2"></div>
+                                <div class="w-1 bg-gray-400 h-8"></div>
+                                <div class="w-1 bg-gray-400 h-4"></div>
+                                <div class="w-1 bg-gray-400 h-6"></div>
+                                <div class="w-1 bg-gray-400 h-3"></div>
+                                <div class="w-1 bg-gray-400 h-5"></div>
+                                <div class="w-1 bg-gray-400 h-2"></div>
+                            </div>
+
+                            <button class="w-full py-3 bg-white text-black font-bold font-mono border-2 border-black hover:bg-punk-pink hover:text-white transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="thumbs-up" class="w-4 h-4"></i> VOTE TRACK B
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Live Chat / Comments (Ticker style) -->
+            <div class="mt-16 border-t-2 border-white/20 pt-8">
+                <h4 class="text-white font-mono mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    LIVE FEED
+                </h4>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-acid-lime px-3 py-1 border border-black rounded-tl-lg rounded-br-lg text-xs font-bold transform -rotate-1">
+                        @UserOne: This drop is insane!!!
+                    </div>
+                    <div class="bg-white px-3 py-1 border border-black rounded-tr-lg rounded-bl-lg text-xs font-bold transform rotate-1">
+                        @BeatMaker99: Track B has better snare.
+                    </div>
+                    <div class="bg-punk-pink text-white px-3 py-1 border border-white rounded-lg text-xs font-bold transform -rotate-2">
+                        @Admin: VOTE ENDS IN 30s
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    
+    <footer class="mt-20 border-t-4 border-black py-12 flex flex-col items-center justify-center text-center gap-4">
+        <h1 class="font-display text-4xl text-gray-400">SONG VERSUS</h1>
+        <div class="flex gap-4 font-mono text-xs">
+            <a href="#" class="hover:bg-black hover:text-white px-1">TERMS</a>
+            <a href="#" class="hover:bg-black hover:text-white px-1">PRIVACY</a>
+            <a href="#" class="hover:bg-black hover:text-white px-1">SUBMIT MUSIC</a>
+        </div>
+        <p class="font-marker text-sm mt-4">MADE FOR THE UNDERGROUND.</p>
+    </footer>
+</div>
+
+<script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Add simple interactivity for the demo buttons
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if(!this.classList.contains('group')) { // exclude nav buttons
+               this.style.transform = 'scale(0.95)';
+               setTimeout(() => {
+                   this.style.transform = 'scale(1)';
+                   // reset transform if it had specific classes, simplifying for demo
+                   if (this.parentElement.classList.contains('space-y-6')) {
+                       this.style.transform = '';
+                   }
+               }, 100);
+            }
+        });
+    });
+</script>
+</body> </html>

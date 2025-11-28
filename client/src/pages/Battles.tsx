@@ -237,23 +237,31 @@ export default function Battles() {
                   </div>
                 ) : (
                   openBattles.map((battle) => (
-                    <div key={battle.id} className="relative">
-                      <Link href={`/battle/${battle.id}`}>
-                        <div className="cursor-pointer">
-                          <BattleCard {...battle} />
+                    <div key={battle.id} className="relative bg-card/50 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all duration-300 group backdrop-blur-sm">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                            Waiting for Opponent
+                          </span>
+                          <span className="text-xs font-mono text-muted-foreground">{battle.timeLeft} Left</span>
                         </div>
-                      </Link>
-                      <Button
-                        size="sm"
-                        className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-600 text-white"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleJoinBattle(battle.id);
-                        }}
-                        data-testid={`button-join-battle-${battle.id}`}
-                      >
-                        Join Battle
-                      </Button>
+                        
+                        <div className="relative aspect-square rounded-lg overflow-hidden mb-4 shadow-lg">
+                          <img src={battle.left.cover} alt={battle.left.track} className="w-full h-full object-cover" />
+                        </div>
+                        
+                        <h3 className="font-bold text-white truncate">{battle.left.track}</h3>
+                        <p className="text-sm text-muted-foreground truncate mb-4">{battle.left.artist}</p>
+                        
+                        <Button
+                          className="w-full bg-green-500 hover:bg-green-600 text-white font-bold"
+                          onClick={() => handleJoinBattle(battle.id)}
+                          data-testid={`button-join-battle-${battle.id}`}
+                        >
+                          Join This Battle
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
