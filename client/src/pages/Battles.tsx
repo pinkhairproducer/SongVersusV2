@@ -17,6 +17,31 @@ import cover3 from "@assets/generated_images/lo-fi_anime_album_art.png";
 import cover4 from "@assets/generated_images/future_bass_crystal_album_art.png";
 import { Link } from "wouter";
 
+interface BattleSide {
+  artist: string;
+  track: string;
+  cover: string;
+  votes: number;
+  isLeading: boolean;
+}
+
+interface FormattedBattle {
+  id: number;
+  type: string;
+  timeLeft: string;
+  left: BattleSide;
+  right: BattleSide | null;
+  canJoin: boolean;
+}
+
+interface CompleteBattle extends FormattedBattle {
+  right: BattleSide;
+}
+
+function isCompleteBattle(battle: FormattedBattle): battle is CompleteBattle {
+  return battle.right !== null;
+}
+
 export default function Battles() {
   const { user, spendCoins } = useUser();
   const { toast } = useToast();
@@ -126,7 +151,7 @@ export default function Battles() {
     }
   };
 
-  const formatBattles = (battles: typeof battlesData) => {
+  const formatBattles = (battles: typeof battlesData): FormattedBattle[] => {
     if (!battles) return [];
     
     const covers = [cover1, cover2, cover3, cover4];
@@ -163,7 +188,7 @@ export default function Battles() {
   };
 
   const allFormattedBattles = formatBattles(battlesData) || [];
-  const completeBattles = allFormattedBattles.filter((b): b is typeof b & { right: NonNullable<typeof b.right> } => b.right !== null);
+  const completeBattles = allFormattedBattles.filter(isCompleteBattle);
   const openBattles = allFormattedBattles.filter(b => b.canJoin);
 
   if (isLoading) {
