@@ -23,6 +23,18 @@ export function Hero() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sv-pink/20 rounded-full blur-3xl animate-[blob_7s_infinite]"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sv-purple/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"></div>
 
+      {/* Animated Waveform - Top Level */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-48 opacity-30 pointer-events-none z-5">
+        <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-1">
+          <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" className="animate-pulse">
+            <animate attributeName="d" dur="3s" repeatCount="indefinite"
+              values="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10;
+                      M0,10 Q10,0 20,10 T40,20 T60,5 T80,15 T100,10;
+                      M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" />
+          </path>
+        </svg>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 px-4 text-center max-w-5xl mx-auto">
         <motion.div
@@ -38,25 +50,13 @@ export function Hero() {
           </div>
           
           {/* Main Title */}
-          <div className="relative mb-8 overflow-visible">
+          <div className="relative mb-8">
             <h1 className="text-6xl md:text-9xl font-cyber font-black text-white leading-none">
               SONG
             </h1>
             <h1 className="text-6xl md:text-9xl font-cyber font-black text-sv-pink leading-none">
               VERSUS
             </h1>
-            
-            {/* Animated Waveform */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-32 opacity-30 pointer-events-none">
-              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-[0.5]">
-                <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" className="animate-pulse">
-                  <animate attributeName="d" dur="3s" repeatCount="indefinite"
-                    values="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10;
-                            M0,10 Q10,0 20,10 T40,20 T60,5 T80,15 T100,10;
-                            M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" />
-                </path>
-              </svg>
-            </div>
           </div>
           
           <p className="font-body text-xl text-gray-400 max-w-2xl mx-auto mb-12">
