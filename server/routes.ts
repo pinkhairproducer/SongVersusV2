@@ -9,6 +9,7 @@ import {
   insertChatMessageSchema,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -220,6 +221,182 @@ export async function registerRoutes(
         return res.status(400).json({ error: fromZodError(error).toString() });
       }
       res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Stripe routes
+  app.get("/api/stripe/config", async (req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get Stripe config" });
+    }
+  });
+
+  app.get("/api/stripe/products", async (req, res) => {
+    try {
+      const products = await storage.getProductsWithPrices();
+      res.json({ data: products });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/stripe/checkout", async (req, res) => {
+    try {
+      const { priceId, userId, mode } = req.body;
+
+      if (!priceId || !userId) {
+        return res.status(400).json({ error: "priceId and userId are required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          metadata: { userId: user.id.toString() },
+        });
+        await storage.updateUserStripeInfo(user.id, customer.id, null, user.membership);
+        customerId = customer.id;
+      }
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: mode || 'subscription',
+        success_url: `${baseUrl}/store?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/store?canceled=true`,
+        metadata: { userId: user.id.toString() },
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Checkout error:', error.message);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  app.get("/api/stripe/subscription/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!user.stripeSubscriptionId) {
+        return res.json({ subscription: null, membership: user.membership });
+      }
+
+      const subscription = await storage.getSubscription(user.stripeSubscriptionId);
+      res.json({ subscription, membership: user.membership });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch subscription" });
+    }
+  });
+
+  app.post("/api/stripe/portal", async (req, res) => {
+    try {
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user || !user.stripeCustomerId) {
+        return res.status(404).json({ error: "No Stripe customer found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${baseUrl}/store`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Portal error:', error.message);
+      res.status(500).json({ error: "Failed to create portal session" });
+    }
+  });
+
+  app.post("/api/stripe/verify-purchase", async (req, res) => {
+    try {
+      const { sessionId, userId } = req.body;
+
+      if (!sessionId || !userId) {
+        return res.status(400).json({ error: "sessionId and userId are required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['line_items', 'line_items.data.price.product'],
+      });
+
+      if (session.payment_status !== 'paid') {
+        return res.status(400).json({ error: "Payment not completed" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const lineItem = session.line_items?.data[0];
+      const product = lineItem?.price?.product as any;
+      const metadata = product?.metadata || {};
+
+      if (metadata.type === 'coins') {
+        const coinAmount = parseInt(metadata.coinAmount || '0');
+        if (coinAmount > 0) {
+          await storage.updateUserCoins(userId, user.coins + coinAmount);
+          return res.json({ 
+            success: true, 
+            type: 'coins', 
+            amount: coinAmount,
+            newBalance: user.coins + coinAmount 
+          });
+        }
+      }
+
+      if (metadata.tier === 'pro' || metadata.tier === 'elite') {
+        const subscriptionId = session.subscription as string;
+        await storage.updateUserStripeInfo(
+          userId, 
+          user.stripeCustomerId, 
+          subscriptionId, 
+          metadata.tier
+        );
+        
+        const bonusCoins = metadata.tier === 'elite' ? 1500 : 500;
+        await storage.updateUserCoins(userId, user.coins + bonusCoins);
+        
+        return res.json({ 
+          success: true, 
+          type: 'membership', 
+          tier: metadata.tier,
+          bonusCoins 
+        });
+      }
+
+      res.json({ success: true, type: 'unknown' });
+    } catch (error: any) {
+      console.error('Verify purchase error:', error.message);
+      res.status(500).json({ error: "Failed to verify purchase" });
     }
   });
 

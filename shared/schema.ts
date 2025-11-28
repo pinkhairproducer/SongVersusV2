@@ -12,6 +12,9 @@ export const users = pgTable("users", {
   wins: integer("wins").notNull().default(0),
   avatar: text("avatar").notNull().default("https://github.com/shadcn.png"),
   password: text("password").notNull(),
+  membership: text("membership").notNull().default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
