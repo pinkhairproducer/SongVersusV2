@@ -16,6 +16,7 @@ import cover2 from "@assets/generated_images/dark_trap_music_album_art.png";
 import cover3 from "@assets/generated_images/lo-fi_anime_album_art.png";
 import cover4 from "@assets/generated_images/future_bass_crystal_album_art.png";
 import { Link } from "wouter";
+import { AudioOrb } from "@/components/battle/AudioOrb";
 
 interface BattleSide {
   artist: string;
@@ -280,19 +281,23 @@ export default function Battles() {
                           <span className="text-xs font-mono text-muted-foreground">{battle.timeLeft} Left</span>
                         </div>
                         
-                        <div className="relative aspect-square rounded-lg overflow-hidden mb-4 shadow-lg">
-                          <img src={battle.left.cover} alt={battle.left.track} className="w-full h-full object-cover" />
+                        <div className="relative aspect-square flex items-center justify-center mb-4">
+                          <AudioOrb 
+                            isPlaying={false} 
+                            color={battle.type === "beat" ? "violet" : "fuchsia"} 
+                            size="lg"
+                          />
                         </div>
                         
-                        <h3 className="font-bold text-white truncate">{battle.left.track}</h3>
-                        <p className="text-sm text-muted-foreground truncate mb-4">{battle.left.artist}</p>
+                        <h3 className="font-bold text-white truncate text-center">{battle.left.track}</h3>
+                        <p className="text-sm text-muted-foreground truncate mb-4 text-center">{battle.left.artist}</p>
                         
                         <Button
                           className="w-full bg-green-500 hover:bg-green-600 text-white font-bold"
                           onClick={() => handleJoinBattle(battle.id)}
                           data-testid={`button-join-battle-${battle.id}`}
                         >
-                          Join This Battle
+                          Join This Battle ({BATTLE_JOIN_COST} Coins)
                         </Button>
                       </div>
                     </div>
