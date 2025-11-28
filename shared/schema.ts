@@ -24,11 +24,16 @@ export const users = pgTable("users", {
   role: text("role").default("artist"),
   coins: integer("coins").notNull().default(1000),
   xp: integer("xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
   wins: integer("wins").notNull().default(0),
   bio: text("bio").default(""),
   membership: text("membership").notNull().default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  equippedPlateId: integer("equipped_plate_id"),
+  equippedAnimationId: integer("equipped_animation_id"),
+  equippedSphereId: integer("equipped_sphere_id"),
+  tutorialCompleted: boolean("tutorial_completed").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -101,6 +106,29 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const customizations = pgTable("customizations", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  previewUrl: text("preview_url"),
+  cssClass: text("css_class"),
+  animationData: jsonb("animation_data"),
+  unlockType: text("unlock_type").notNull().default("level"),
+  requiredLevel: integer("required_level").default(1),
+  coinCost: integer("coin_cost").default(0),
+  rarity: text("rarity").notNull().default("common"),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userCustomizations = pgTable("user_customizations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  customizationId: integer("customization_id").notNull().references(() => customizations.id),
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -183,3 +211,19 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+export const insertCustomizationSchema = createInsertSchema(customizations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserCustomizationSchema = createInsertSchema(userCustomizations).omit({
+  id: true,
+  unlockedAt: true,
+});
+
+export type Customization = typeof customizations.$inferSelect;
+export type InsertCustomization = z.infer<typeof insertCustomizationSchema>;
+
+export type UserCustomization = typeof userCustomizations.$inferSelect;
+export type InsertUserCustomization = z.infer<typeof insertUserCustomizationSchema>;

@@ -6,11 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Heart, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AudioReactiveSphere } from "@/components/battle/AudioReactiveSphere";
+import { ProfileCard } from "@/components/battle/ProfileCard";
 import { motion } from "framer-motion";
 import { useRoute } from "wouter";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchBattle, fetchUserVote, voteOnBattle, fetchComments, postComment } from "@/lib/api";
+import { fetchBattle, fetchUserVote, voteOnBattle, fetchComments, postComment, fetchUser } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,6 +39,18 @@ export default function BattleDetail() {
     queryKey: ["comments", battleId],
     queryFn: () => fetchComments(battleId),
     refetchInterval: 5000,
+  });
+
+  const { data: leftUser } = useQuery({
+    queryKey: ["user", battle?.leftUserId],
+    queryFn: () => battle?.leftUserId ? fetchUser(battle.leftUserId) : null,
+    enabled: !!battle?.leftUserId,
+  });
+
+  const { data: rightUser } = useQuery({
+    queryKey: ["user", battle?.rightUserId],
+    queryFn: () => battle?.rightUserId ? fetchUser(battle.rightUserId) : null,
+    enabled: !!battle?.rightUserId,
   });
 
   const voteMutation = useMutation({
@@ -161,6 +174,21 @@ export default function BattleDetail() {
 
             {/* Left Contender */}
             <div className="flex flex-col gap-6">
+              {leftUser && (
+                <ProfileCard
+                  userId={leftUser.id}
+                  name={leftUser.name || battle.leftArtist}
+                  avatar={leftUser.profileImageUrl}
+                  role={leftUser.role || "artist"}
+                  level={leftUser.level || 1}
+                  xp={leftUser.xp || 0}
+                  wins={leftUser.wins || 0}
+                  membership={leftUser.membership || "free"}
+                  side="left"
+                  isWinner={battle.status === "completed" && battle.leftVotes > battle.rightVotes}
+                />
+              )}
+              
               <div className="relative aspect-square flex items-center justify-center">
                 <AudioReactiveSphere 
                   isPlaying={playing === "left"}
@@ -194,6 +222,21 @@ export default function BattleDetail() {
 
             {/* Right Contender */}
             <div className="flex flex-col gap-6">
+              {rightUser && (
+                <ProfileCard
+                  userId={rightUser.id}
+                  name={rightUser.name || battle.rightArtist || "Unknown"}
+                  avatar={rightUser.profileImageUrl}
+                  role={rightUser.role || "artist"}
+                  level={rightUser.level || 1}
+                  xp={rightUser.xp || 0}
+                  wins={rightUser.wins || 0}
+                  membership={rightUser.membership || "free"}
+                  side="right"
+                  isWinner={battle.status === "completed" && battle.rightVotes > battle.leftVotes}
+                />
+              )}
+              
               <div className="relative aspect-square flex items-center justify-center">
                 <AudioReactiveSphere 
                   isPlaying={playing === "right"}
@@ -258,7 +301,7 @@ export default function BattleDetail() {
             <div className="bg-card/50 border border-white/5 rounded-xl p-6 backdrop-blur-sm mb-8">
               <div className="flex gap-4 mb-6">
                 <Avatar>
-                   <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} />
+                   <AvatarImage src={user?.profileImageUrl || undefined} />
                    <AvatarFallback>{user?.name?.[0] || "?"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow">

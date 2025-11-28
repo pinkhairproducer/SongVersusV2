@@ -14,10 +14,15 @@ interface User {
   coins: number;
   xp: number;
   wins: number;
+  level: number;
   bio: string | null;
   membership: string;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
+  tutorialCompleted: boolean;
+  equippedPlate?: number | null;
+  equippedAnimation?: number | null;
+  equippedSphere?: number | null;
 }
 
 interface UserContextType {

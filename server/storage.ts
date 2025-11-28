@@ -7,6 +7,8 @@ import {
   follows,
   notifications,
   messages,
+  customizations,
+  userCustomizations,
   type User,
   type UpsertUser,
   type Battle,
@@ -23,6 +25,8 @@ import {
   type InsertNotification,
   type Message,
   type InsertMessage,
+  type Customization,
+  type UserCustomization,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -95,6 +99,16 @@ export interface IStorage {
   markMessageAsRead(messageId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
   getNotification(notificationId: number): Promise<Notification | undefined>;
+
+  getAllCustomizations(): Promise<Customization[]>;
+  getCustomizationsByCategory(category: string): Promise<Customization[]>;
+  getUserCustomizations(userId: number): Promise<Array<Customization & { unlockedAt: Date }>>;
+  unlockCustomization(userId: number, customizationId: number): Promise<UserCustomization>;
+  hasCustomization(userId: number, customizationId: number): Promise<boolean>;
+  equipCustomization(userId: number, category: string, customizationId: number): Promise<User>;
+  updateUserLevel(userId: number, level: number): Promise<void>;
+  completeTutorial(userId: number): Promise<void>;
+  searchUsers(query: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -501,6 +515,76 @@ export class DatabaseStorage implements IStorage {
   async getNotification(notificationId: number): Promise<Notification | undefined> {
     const [notification] = await db.select().from(notifications).where(eq(notifications.id, notificationId));
     return notification || undefined;
+  }
+
+  async getAllCustomizations(): Promise<Customization[]> {
+    return await db.select().from(customizations).orderBy(customizations.category, customizations.requiredLevel);
+  }
+
+  async getCustomizationsByCategory(category: string): Promise<Customization[]> {
+    return await db.select().from(customizations).where(eq(customizations.category, category)).orderBy(customizations.requiredLevel);
+  }
+
+  async getUserCustomizations(userId: number): Promise<Array<Customization & { unlockedAt: Date }>> {
+    const result = await db
+      .select({
+        id: customizations.id,
+        category: customizations.category,
+        name: customizations.name,
+        description: customizations.description,
+        previewUrl: customizations.previewUrl,
+        cssClass: customizations.cssClass,
+        animationData: customizations.animationData,
+        unlockType: customizations.unlockType,
+        requiredLevel: customizations.requiredLevel,
+        coinCost: customizations.coinCost,
+        rarity: customizations.rarity,
+        isDefault: customizations.isDefault,
+        createdAt: customizations.createdAt,
+        unlockedAt: userCustomizations.unlockedAt,
+      })
+      .from(userCustomizations)
+      .innerJoin(customizations, eq(userCustomizations.customizationId, customizations.id))
+      .where(eq(userCustomizations.userId, userId));
+    return result;
+  }
+
+  async unlockCustomization(userId: number, customizationId: number): Promise<UserCustomization> {
+    const [unlock] = await db.insert(userCustomizations).values({ userId, customizationId }).returning();
+    return unlock;
+  }
+
+  async hasCustomization(userId: number, customizationId: number): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(userCustomizations)
+      .where(sql`${userCustomizations.userId} = ${userId} AND ${userCustomizations.customizationId} = ${customizationId}`);
+    return result.length > 0;
+  }
+
+  async equipCustomization(userId: number, category: string, customizationId: number): Promise<User> {
+    let updateData: any = {};
+    if (category === 'plate') {
+      updateData.equippedPlateId = customizationId;
+    } else if (category === 'animation') {
+      updateData.equippedAnimationId = customizationId;
+    } else if (category === 'sphere') {
+      updateData.equippedSphereId = customizationId;
+    }
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, userId)).returning();
+    return user;
+  }
+
+  async updateUserLevel(userId: number, level: number): Promise<void> {
+    await db.update(users).set({ level }).where(eq(users.id, userId));
+  }
+
+  async completeTutorial(userId: number): Promise<void> {
+    await db.update(users).set({ tutorialCompleted: true }).where(eq(users.id, userId));
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    return await db.select().from(users).where(sql`${users.name} ILIKE ${'%' + query + '%'}`).limit(10);
   }
 }
 

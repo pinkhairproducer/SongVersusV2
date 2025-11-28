@@ -691,5 +691,137 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/customizations", async (req, res) => {
+    try {
+      const customizations = await storage.getAllCustomizations();
+      res.json(customizations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customizations" });
+    }
+  });
+
+  app.get("/api/customizations/category/:category", async (req, res) => {
+    try {
+      const category = req.params.category;
+      const customizations = await storage.getCustomizationsByCategory(category);
+      res.json(customizations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customizations" });
+    }
+  });
+
+  app.get("/api/customizations/user/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const customizations = await storage.getUserCustomizations(userId);
+      res.json(customizations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user customizations" });
+    }
+  });
+
+  app.post("/api/customizations/unlock", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { customizationId } = req.body;
+      const customizations = await storage.getAllCustomizations();
+      const customization = customizations.find(c => c.id === customizationId);
+      
+      if (!customization) {
+        return res.status(404).json({ error: "Customization not found" });
+      }
+
+      const alreadyOwned = await storage.hasCustomization(authUser.id, customizationId);
+      if (alreadyOwned) {
+        return res.status(400).json({ error: "Already owned" });
+      }
+
+      if (customization.unlockType === 'level') {
+        if ((authUser.level || 1) < (customization.requiredLevel || 1)) {
+          return res.status(400).json({ error: "Level too low" });
+        }
+      } else if (customization.unlockType === 'coin') {
+        if (authUser.coins < (customization.coinCost || 0)) {
+          return res.status(400).json({ error: "Not enough coins" });
+        }
+        await storage.updateUserCoins(authUser.id, authUser.coins - (customization.coinCost || 0));
+      }
+
+      const unlock = await storage.unlockCustomization(authUser.id, customizationId);
+      res.json(unlock);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unlock customization" });
+    }
+  });
+
+  app.post("/api/customizations/equip", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { category, customizationId } = req.body;
+      
+      const customizations = await storage.getAllCustomizations();
+      const customization = customizations.find(c => c.id === customizationId);
+      
+      if (!customization) {
+        return res.status(404).json({ error: "Customization not found" });
+      }
+
+      if (customization.category !== category) {
+        return res.status(400).json({ error: "Category mismatch" });
+      }
+
+      if (!customization.isDefault) {
+        const owned = await storage.hasCustomization(authUser.id, customizationId);
+        if (!owned) {
+          return res.status(400).json({ error: "You don't own this customization" });
+        }
+      }
+
+      const user = await storage.equipCustomization(authUser.id, category, customizationId);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to equip customization" });
+    }
+  });
+
+  app.post("/api/tutorial/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.completeTutorial(authUser.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to complete tutorial" });
+    }
+  });
+
   return httpServer;
 }
