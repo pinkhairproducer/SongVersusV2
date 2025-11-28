@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Play, Pause, Heart, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Waveform } from "@/components/battle/Waveform";
+import { AudioReactiveSphere } from "@/components/battle/AudioReactiveSphere";
 import { motion } from "framer-motion";
 import { useRoute } from "wouter";
 import { cn } from "@/lib/utils";
@@ -162,20 +162,41 @@ export default function BattleDetail() {
 
             {/* Left Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
-                <img src={battle.leftCover} alt="Cover" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl group bg-black/40 flex items-center justify-center">
+                <AudioReactiveSphere 
+                  isPlaying={playing === "left"}
+                  color="cyan"
+                  size={280}
+                  className="z-10"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
                   <Button 
                     size="icon" 
-                    className="w-20 h-20 rounded-full bg-white text-black hover:bg-white/90 hover:scale-110 transition-transform"
+                    className="w-20 h-20 rounded-full bg-white/90 text-black hover:bg-white hover:scale-110 transition-transform shadow-2xl"
                     onClick={() => setPlaying(playing === "left" ? null : "left")}
+                    data-testid="button-play-left"
                   >
                     {playing === "left" ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
                   </Button>
                 </div>
                 {playing === "left" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-black/80 to-transparent flex items-end pb-6 px-6 justify-center">
-                     <Waveform color="bg-violet-500" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center z-20">
+                    <div className="flex items-center gap-1">
+                      {[...Array(12)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 bg-cyan-400 rounded-full"
+                          animate={{
+                            height: [8, 24 + Math.random() * 16, 8],
+                          }}
+                          transition={{
+                            duration: 0.4 + Math.random() * 0.2,
+                            repeat: Infinity,
+                            delay: i * 0.05,
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -205,20 +226,41 @@ export default function BattleDetail() {
 
             {/* Right Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
-                <img src={battle.rightCover || battle.leftCover} alt="Cover" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <Button 
+              <div className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 shadow-2xl group bg-black/40 flex items-center justify-center">
+                <AudioReactiveSphere 
+                  isPlaying={playing === "right"}
+                  color="fuchsia"
+                  size={280}
+                  className="z-10"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  <Button 
                     size="icon" 
-                    className="w-20 h-20 rounded-full bg-white text-black hover:bg-white/90 hover:scale-110 transition-transform"
+                    className="w-20 h-20 rounded-full bg-white/90 text-black hover:bg-white hover:scale-110 transition-transform shadow-2xl"
                     onClick={() => setPlaying(playing === "right" ? null : "right")}
+                    data-testid="button-play-right"
                   >
                     {playing === "right" ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
                   </Button>
                 </div>
                 {playing === "right" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-black/80 to-transparent flex items-end pb-6 px-6 justify-center">
-                     <Waveform color="bg-fuchsia-500" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center z-20">
+                    <div className="flex items-center gap-1">
+                      {[...Array(12)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 bg-fuchsia-400 rounded-full"
+                          animate={{
+                            height: [8, 24 + Math.random() * 16, 8],
+                          }}
+                          transition={{
+                            duration: 0.4 + Math.random() * 0.2,
+                            repeat: Infinity,
+                            delay: i * 0.05,
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
