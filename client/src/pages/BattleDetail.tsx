@@ -115,7 +115,7 @@ export default function BattleDetail() {
 
   // Calculate time left
   const now = new Date();
-  const endsAt = new Date(battle.endsAt);
+  const endsAt = battle.endsAt ? new Date(battle.endsAt) : new Date(now.getTime() + 48 * 60 * 60 * 1000);
   const timeLeft = Math.max(0, endsAt.getTime() - now.getTime());
   const hours = Math.floor(timeLeft / (1000 * 60 * 60));
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));

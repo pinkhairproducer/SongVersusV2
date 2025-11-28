@@ -120,7 +120,11 @@ export async function registerRoutes(
   app.post("/api/battles", async (req, res) => {
     try {
       const data = insertBattleSchema.parse(req.body);
-      const battle = await storage.createBattle(data);
+      const battleData = {
+        ...data,
+        status: "pending" as const,
+      };
+      const battle = await storage.createBattle(battleData);
       res.json(battle);
     } catch (error: any) {
       if (error.name === "ZodError") {
@@ -133,9 +137,9 @@ export async function registerRoutes(
   app.post("/api/battles/:id/join", async (req, res) => {
     try {
       const battleId = parseInt(req.params.id);
-      const { userId, artist, track, cover } = req.body;
+      const { userId, artist, track, audio } = req.body;
 
-      const battle = await storage.joinBattle(battleId, userId, artist, track, cover);
+      const battle = await storage.joinBattle(battleId, userId, artist, track, audio);
       res.json(battle);
     } catch (error) {
       res.status(500).json({ error: "Failed to join battle" });

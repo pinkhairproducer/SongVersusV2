@@ -56,7 +56,7 @@ export interface IStorage {
   getBattle(id: number): Promise<Battle | undefined>;
   getAllBattles(): Promise<Battle[]>;
   createBattle(battle: InsertBattle): Promise<Battle>;
-  joinBattle(battleId: number, userId: number, artist: string, track: string, cover: string): Promise<Battle>;
+  joinBattle(battleId: number, userId: number, artist: string, track: string, audio: string): Promise<Battle>;
   updateBattleVotes(battleId: number, side: "left" | "right", increment: number): Promise<void>;
 
   // Votes
@@ -200,14 +200,16 @@ export class DatabaseStorage implements IStorage {
     return battle;
   }
 
-  async joinBattle(battleId: number, userId: number, artist: string, track: string, cover: string): Promise<Battle> {
+  async joinBattle(battleId: number, userId: number, artist: string, track: string, audio: string): Promise<Battle> {
     const [battle] = await db
       .update(battles)
       .set({
         rightArtist: artist,
         rightTrack: track,
-        rightCover: cover,
+        rightAudio: audio,
         rightUserId: userId,
+        status: "active",
+        endsAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
       })
       .where(eq(battles.id, battleId))
       .returning();
