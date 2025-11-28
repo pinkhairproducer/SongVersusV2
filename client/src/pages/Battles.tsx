@@ -163,7 +163,7 @@ export default function Battles() {
   };
 
   const allFormattedBattles = formatBattles(battlesData) || [];
-  const completeBattles = allFormattedBattles.filter(b => b.right !== null);
+  const completeBattles = allFormattedBattles.filter((b): b is typeof b & { right: NonNullable<typeof b.right> } => b.right !== null);
   const openBattles = allFormattedBattles.filter(b => b.canJoin);
 
   if (isLoading) {
