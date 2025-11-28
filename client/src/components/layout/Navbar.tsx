@@ -110,15 +110,21 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
-                    My Battles
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
-                    Settings
-                  </DropdownMenuItem>
+                  <Link href="/profile">
+                    <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                      Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/my-battles">
+                    <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                      My Battles
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/settings">
+                    <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer">
+                      Settings
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem className="focus:bg-white/10 focus:text-white cursor-pointer text-red-400" onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -163,6 +169,16 @@ export function Navbar() {
               <Link href="/artists" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Artists</Link>
               <Link href="/producers" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white">Producers</Link>
               <Link href="/store" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-yellow-400 hover:text-yellow-300 flex items-center gap-2"><ShoppingBag className="w-5 h-5" /> Store</Link>
+              
+              {user && (
+                <>
+                  <div className="border-t border-white/10 pt-4 mt-2">
+                    <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white block py-1">Profile</Link>
+                    <Link href="/my-battles" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white block py-1">My Battles</Link>
+                    <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-white block py-1">Settings</Link>
+                  </div>
+                </>
+              )}
               
               {!user ? (
                  <Button className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center" onClick={() => { setIsMobileMenuOpen(false); setIsSignupOpen(true); }}>
