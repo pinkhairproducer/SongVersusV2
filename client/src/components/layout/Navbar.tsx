@@ -1,9 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Bell, Menu, X, ShoppingBag, Coins, LogOut, Zap } from "lucide-react";
-import { useState } from "react";
+import { Search, Bell, Menu, X, ShoppingBag, Coins, LogOut, Zap, Mail, UserPlus, Trophy, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +13,70 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
+
+interface Notification {
+  id: number;
+  userId: number;
+  fromUserId: number | null;
+  type: string;
+  battleId: number | null;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  fromUserName?: string | null;
+  fromUserAvatar?: string | null;
+}
 
 export function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isLoading, login, logout } = useUser();
+  const queryClient = useQueryClient();
+
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ["notifications", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const res = await fetch(`/api/notifications/${user.id}`);
+      return res.json();
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+
+  const { data: unreadCount = 0 } = useQuery<number>({
+    queryKey: ["notificationCount", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const res = await fetch(`/api/notifications/${user.id}/count`);
+      const data = await res.json();
+      return data.count;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+      await fetch(`/api/notifications/${user.id}/read-all`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+    },
+  });
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "follow": return <UserPlus className="w-4 h-4 text-sv-purple" />;
+      case "message": return <Mail className="w-4 h-4 text-sv-pink" />;
+      case "vote": return <Trophy className="w-4 h-4 text-sv-gold" />;
+      default: return <Bell className="w-4 h-4 text-gray-400" />;
+    }
+  };
 
   const isActive = (path: string) => location === path;
 
@@ -75,6 +135,86 @@ export function Navbar() {
                 <Coins className="w-3.5 h-3.5 skew-x-[6deg]" />
                 <span className="skew-x-[6deg]">{user.coins.toLocaleString()}</span>
               </div>
+            )}
+
+            {/* Inbox Button */}
+            {user && (
+              <Link href="/inbox">
+                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-sv-pink hidden sm:flex relative" data-testid="button-inbox">
+                  <Mail className="w-5 h-5" />
+                </Button>
+              </Link>
+            )}
+
+            {/* Notifications Dropdown */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-gray-400 hover:text-sv-pink hidden sm:flex relative" data-testid="button-notifications">
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-sv-pink text-black text-xs font-bold flex items-center justify-center">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80 bg-sv-dark border-sv-gray rounded-none" align="end">
+                  <DropdownMenuLabel className="flex items-center justify-between">
+                    <span className="font-cyber text-white uppercase tracking-wider">Notifications</span>
+                    {unreadCount > 0 && (
+                      <button 
+                        className="text-xs text-sv-pink hover:text-white font-hud uppercase tracking-wider"
+                        onClick={() => markAllReadMutation.mutate()}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-sv-gray" />
+                  <ScrollArea className="h-[300px]">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500 font-body">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.slice(0, 10).map((notification) => (
+                        <div 
+                          key={notification.id} 
+                          className={`p-3 border-b border-sv-gray/50 hover:bg-sv-purple/10 transition-colors ${!notification.read ? 'bg-sv-purple/5' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="mt-0.5">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-white font-body leading-tight">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1 font-hud">
+                                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                              </p>
+                            </div>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-sv-pink mt-1.5" />
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </ScrollArea>
+                  {notifications.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator className="bg-sv-gray" />
+                      <Link href="/inbox">
+                        <DropdownMenuItem className="justify-center text-sv-pink hover:text-white font-hud uppercase tracking-wider text-sm cursor-pointer rounded-none">
+                          View All
+                        </DropdownMenuItem>
+                      </Link>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-sv-pink hidden sm:flex">
