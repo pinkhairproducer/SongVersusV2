@@ -1,7 +1,8 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Music4, UserPlus, Play } from "lucide-react";
+import { Music4, UserPlus, User } from "lucide-react";
+import { useLocation } from "wouter";
 
 const PRODUCERS = [
   { id: 1, name: "Neon Pulse", genre: "Synthwave", followers: "150k", avatar: "https://github.com/shadcn.png", trending: true },
@@ -13,6 +14,8 @@ const PRODUCERS = [
 ];
 
 export default function Producers() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -52,8 +55,14 @@ export default function Producers() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
                   <span className="text-xs font-medium text-muted-foreground">{producer.followers} Followers</span>
-                  <Button size="sm" variant="outline" className="h-8 border-white/10 hover:bg-white/10 hover:text-white text-xs">
-                    <Play className="w-3 h-3 mr-2" /> Beat Store
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 border-white/10 hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/50 text-xs"
+                    onClick={() => setLocation("/profile")}
+                    data-testid={`button-view-producer-${producer.id}`}
+                  >
+                    <User className="w-3 h-3 mr-2" /> View Profile
                   </Button>
                 </div>
               </div>

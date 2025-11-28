@@ -1,7 +1,8 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Mic, UserPlus, Play } from "lucide-react";
+import { Mic, UserPlus, User } from "lucide-react";
+import { useLocation } from "wouter";
 
 const ARTISTS = [
   { id: 1, name: "Lofi Study Girl", genre: "Lo-fi / Chill", followers: "124k", avatar: "https://github.com/shadcn.png", trending: true },
@@ -13,6 +14,8 @@ const ARTISTS = [
 ];
 
 export default function Artists() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -52,8 +55,14 @@ export default function Artists() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
                   <span className="text-xs font-medium text-muted-foreground">{artist.followers} Followers</span>
-                  <Button size="sm" variant="outline" className="h-8 border-white/10 hover:bg-white/10 hover:text-white text-xs">
-                    <Play className="w-3 h-3 mr-2" /> Latest Track
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 border-white/10 hover:bg-fuchsia-500/20 hover:text-fuchsia-400 hover:border-fuchsia-500/50 text-xs"
+                    onClick={() => setLocation("/profile")}
+                    data-testid={`button-view-artist-${artist.id}`}
+                  >
+                    <User className="w-3 h-3 mr-2" /> View Profile
                   </Button>
                 </div>
               </div>
