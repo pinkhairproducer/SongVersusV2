@@ -176,36 +176,19 @@ export function AudioReactiveSphere({
 
     ctx.putImageData(imageData, 0, 0);
 
-    const glowGradient = ctx.createRadialGradient(
-      centerX, centerY, radius * 0.8,
-      centerX, centerY, radius * 1.5
-    );
-    glowGradient.addColorStop(0, `rgba(${palette.primary[0]}, ${palette.primary[1]}, ${palette.primary[2]}, ${isPlaying ? 0.3 * intensity : 0.1})`);
-    glowGradient.addColorStop(0.5, `rgba(${palette.accent[0]}, ${palette.accent[1]}, ${palette.accent[2]}, ${isPlaying ? 0.15 * intensity : 0.05})`);
-    glowGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-
-    ctx.globalCompositeOperation = "screen";
-    ctx.fillStyle = glowGradient;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
-
     timeRef.current += 1;
     animationRef.current = requestAnimationFrame(draw);
   }, [isPlaying, audioLevel, noise, palette]);
-
-  const canvasSize = size * 1.6;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvasSize * dpr;
-    canvas.height = canvasSize * dpr;
-    canvas.style.width = `${canvasSize}px`;
-    canvas.style.height = `${canvasSize}px`;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
 
     const ctx = canvas.getContext("2d");
     if (ctx) {
@@ -219,7 +202,7 @@ export function AudioReactiveSphere({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [size, canvasSize, draw]);
+  }, [size, draw]);
 
   return (
     <div
@@ -227,24 +210,14 @@ export function AudioReactiveSphere({
         "relative flex items-center justify-center",
         className
       )}
-      style={{ width: canvasSize, height: canvasSize }}
+      style={{ width: size, height: size }}
     >
       <canvas
         ref={canvasRef}
         className="absolute inset-0"
-        style={{ width: canvasSize, height: canvasSize }}
+        style={{ width: size, height: size }}
         data-testid="audio-reactive-sphere"
       />
-      {isPlaying && (
-        <div
-          className="absolute rounded-full animate-pulse opacity-20"
-          style={{
-            width: canvasSize,
-            height: canvasSize,
-            background: `radial-gradient(circle, rgba(${palette.primary.join(",")}, 0.4) 0%, transparent 70%)`,
-          }}
-        />
-      )}
     </div>
   );
 }

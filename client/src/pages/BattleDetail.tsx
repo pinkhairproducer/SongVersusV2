@@ -3,8 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Play, Pause, Heart, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AudioReactiveSphere } from "@/components/battle/AudioReactiveSphere";
 import { motion } from "framer-motion";
@@ -162,43 +161,12 @@ export default function BattleDetail() {
 
             {/* Left Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl group bg-black/40 flex items-center justify-center">
+              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl bg-black/40 flex items-center justify-center overflow-hidden">
                 <AudioReactiveSphere 
                   isPlaying={playing === "left"}
                   color="cyan"
-                  size={220}
-                  className="z-10"
+                  size={280}
                 />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <Button 
-                    size="icon" 
-                    className="w-20 h-20 rounded-full bg-white/90 text-black hover:bg-white hover:scale-110 transition-transform shadow-2xl"
-                    onClick={() => setPlaying(playing === "left" ? null : "left")}
-                    data-testid="button-play-left"
-                  >
-                    {playing === "left" ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-                  </Button>
-                </div>
-                {playing === "left" && (
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center z-20">
-                    <div className="flex items-center gap-1">
-                      {[...Array(12)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1 bg-cyan-400 rounded-full"
-                          animate={{
-                            height: [8, 24 + Math.random() * 16, 8],
-                          }}
-                          transition={{
-                            duration: 0.4 + Math.random() * 0.2,
-                            repeat: Infinity,
-                            delay: i * 0.05,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
               
               <div className="space-y-4">
@@ -226,43 +194,12 @@ export default function BattleDetail() {
 
             {/* Right Contender */}
             <div className="flex flex-col gap-6">
-              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl group bg-black/40 flex items-center justify-center">
+              <div className="relative aspect-square rounded-2xl border border-white/10 shadow-2xl bg-black/40 flex items-center justify-center overflow-hidden">
                 <AudioReactiveSphere 
                   isPlaying={playing === "right"}
                   color="fuchsia"
-                  size={220}
-                  className="z-10"
+                  size={280}
                 />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <Button 
-                    size="icon" 
-                    className="w-20 h-20 rounded-full bg-white/90 text-black hover:bg-white hover:scale-110 transition-transform shadow-2xl"
-                    onClick={() => setPlaying(playing === "right" ? null : "right")}
-                    data-testid="button-play-right"
-                  >
-                    {playing === "right" ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-                  </Button>
-                </div>
-                {playing === "right" && (
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center z-20">
-                    <div className="flex items-center gap-1">
-                      {[...Array(12)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="w-1 bg-fuchsia-400 rounded-full"
-                          animate={{
-                            height: [8, 24 + Math.random() * 16, 8],
-                          }}
-                          transition={{
-                            duration: 0.4 + Math.random() * 0.2,
-                            repeat: Infinity,
-                            delay: i * 0.05,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
               
               <div className="space-y-4">
