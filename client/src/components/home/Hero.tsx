@@ -5,7 +5,7 @@ import heroBg from "@assets/generated_images/dark_cinematic_music_studio_backgro
 
 export function Hero() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-16">
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-x-clip overflow-y-visible pt-16">
       {/* Cyber Grid Background */}
       <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none"></div>
       
