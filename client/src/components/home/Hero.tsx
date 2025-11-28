@@ -33,7 +33,7 @@ export function Hero() {
           {/* Season Tag */}
           <div className="relative inline-block mb-8">
             <span className="absolute -top-2 -right-8 md:-right-16 text-lg md:text-2xl font-punk text-sv-gold rotate-12 bg-sv-black px-2 sketch-border">
-              SEASON 3
+              SEASON 1
             </span>
           </div>
           
@@ -154,8 +154,8 @@ export function Hero() {
             <div className="text-sm text-gray-500 font-hud uppercase tracking-widest">Battles</div>
           </div>
           <div>
-            <div className="text-3xl font-cyber font-bold text-sv-gold">$50K</div>
-            <div className="text-sm text-gray-500 font-hud uppercase tracking-widest">Prizes Won</div>
+            <div className="text-3xl font-cyber font-bold text-sv-gold">18K+</div>
+            <div className="text-sm text-gray-500 font-hud uppercase tracking-widest">Producers</div>
           </div>
           <div>
             <div className="text-3xl font-cyber font-bold text-white">1M+</div>
