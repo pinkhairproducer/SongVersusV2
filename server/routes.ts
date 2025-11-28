@@ -32,6 +32,7 @@ export async function registerRoutes(
       const user = await storage.createUser(data);
       res.json({ user: { ...user, password: undefined } });
     } catch (error: any) {
+      console.error("Signup error:", error);
       if (error.name === "ZodError") {
         return res.status(400).json({ error: fromZodError(error).toString() });
       }
