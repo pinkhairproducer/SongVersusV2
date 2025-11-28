@@ -38,7 +38,7 @@ export function Hero() {
           </div>
           
           {/* Main Title */}
-          <div className="relative mb-8">
+          <div className="relative mb-8 overflow-visible">
             <h1 className="text-6xl md:text-9xl font-cyber font-black text-white leading-none">
               SONG
             </h1>
@@ -47,7 +47,7 @@ export function Hero() {
             </h1>
             
             {/* Animated Waveform */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-32 opacity-30 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-32 opacity-30 pointer-events-none">
               <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-none stroke-sv-purple stroke-[0.5]">
                 <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" className="animate-pulse">
                   <animate attributeName="d" dur="3s" repeatCount="indefinite"
