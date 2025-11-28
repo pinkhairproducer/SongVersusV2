@@ -11,6 +11,7 @@ import {
 import { fromZodError } from "zod-validation-error";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -27,6 +28,67 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.put("/api/profile-image", isAuthenticated, async (req: any, res) => {
+    if (!req.body.imageURL) {
+      return res.status(400).json({ error: "imageURL is required" });
+    }
+
+    const replitAuthId = req.user.claims.sub;
+    const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+    if (!authUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.imageURL,
+        {
+          owner: replitAuthId,
+          visibility: "public",
+        }
+      );
+
+      const updatedUser = await storage.updateUserProfile(
+        authUser.id,
+        objectPath,
+        authUser.bio || "",
+        authUser.name || undefined,
+        authUser.role || undefined
+      );
+
+      res.status(200).json({ profileImageUrl: objectPath, user: updatedUser });
+    } catch (error) {
+      console.error("Error setting profile image:", error);
+      res.status(500).json({ error: "Failed to update profile image" });
     }
   });
 

@@ -3,11 +3,15 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import { useLocation } from "wouter";
-import { AlertCircle, LogOut } from "lucide-react";
+import { AlertCircle, LogOut, Camera } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
-  const { user, logout } = useUser();
+  const { user, logout, refreshUser } = useUser();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   if (!user) {
     return (
@@ -31,6 +35,42 @@ export default function Settings() {
     setLocation("/");
   };
 
+  const handleGetUploadParameters = async () => {
+    const response = await fetch("/api/objects/upload", {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to get upload URL");
+    const { uploadURL } = await response.json();
+    return { method: "PUT" as const, url: uploadURL };
+  };
+
+  const handleUploadComplete = async (uploadUrl: string) => {
+    try {
+      const response = await fetch("/api/profile-image", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ imageURL: uploadUrl }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to update profile");
+      
+      await refreshUser();
+      toast({
+        title: "Profile picture updated!",
+        description: "Your new profile picture is now visible.",
+      });
+    } catch (error) {
+      console.error("Failed to update profile image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -39,6 +79,34 @@ export default function Settings() {
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl font-bold text-white mb-8">Settings</h1>
+
+            {/* Profile Picture Section */}
+            <div className="bg-card/50 border border-white/10 rounded-2xl p-6 mb-6 backdrop-blur-sm">
+              <h2 className="text-xl font-bold text-white mb-4">Profile Picture</h2>
+              <div className="flex items-center gap-6">
+                <Avatar className="w-24 h-24 border-4 border-sv-pink">
+                  <AvatarImage src={user.profileImageUrl || undefined} />
+                  <AvatarFallback className="text-2xl font-bold bg-sv-gray">
+                    {(user.name || "?")[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-2">
+                  <ObjectUploader
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleUploadComplete}
+                    maxFileSize={5242880}
+                    allowedFileTypes={["image/jpeg", "image/png", "image/gif", "image/webp"]}
+                    buttonClassName="bg-sv-pink hover:bg-sv-pink/80 text-black font-bold"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Upload New Picture
+                  </ObjectUploader>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, GIF or WebP. Max 5MB.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* Account Section */}
             <div className="bg-card/50 border border-white/10 rounded-2xl p-6 mb-6 backdrop-blur-sm">
