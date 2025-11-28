@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Bell, Upload, Menu, X, ShoppingBag, Coins, LogOut } from "lucide-react";
 import { useState } from "react";
-import { SignupModal } from "@/components/auth/SignupModal";
 import { useUser } from "@/context/UserContext";
 import {
   DropdownMenu,
@@ -17,10 +16,12 @@ import {
 export function Navbar() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const { user, logout } = useUser();
+  const { user, isLoading, login, logout } = useUser();
 
   const isActive = (path: string) => location === path;
+
+  const displayName = user?.name || user?.firstName || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = user?.profileImageUrl || 'https://github.com/shadcn.png';
 
   return (
     <>
@@ -82,28 +83,31 @@ export function Navbar() {
             
             <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block" />
             
-            {!user ? (
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
+            ) : !user ? (
               <Button 
                 variant="ghost" 
                 className="text-muted-foreground hover:text-white hover:bg-white/5"
-                onClick={() => setIsSignupOpen(true)}
+                onClick={login}
+                data-testid="button-login"
               >
-                Sign Up
+                Sign In
               </Button>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="button-user-menu">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      <AvatarImage src={avatarUrl} alt={displayName} />
+                      <AvatarFallback>{displayName[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 bg-black/95 border-white/10 text-white" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.role === 'producer' ? 'Producer' : 'Artist'}
                       </p>
@@ -153,11 +157,11 @@ export function Navbar() {
               {user && (
                  <div className="flex items-center gap-3 pb-4 border-b border-white/10">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      <AvatarImage src={avatarUrl} />
+                      <AvatarFallback>{displayName[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                       <p className="font-bold text-white">{user.name}</p>
+                       <p className="font-bold text-white">{displayName}</p>
                        <p className="text-xs text-yellow-400 flex items-center gap-1">
                          <Coins className="w-3 h-3" /> {user.coins.toLocaleString()}
                        </p>
@@ -181,8 +185,12 @@ export function Navbar() {
               )}
               
               {!user ? (
-                 <Button className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center" onClick={() => { setIsMobileMenuOpen(false); setIsSignupOpen(true); }}>
-                   Sign Up
+                 <Button 
+                   className="w-full bg-white text-black hover:bg-white/90 font-bold justify-center" 
+                   onClick={() => { setIsMobileMenuOpen(false); login(); }}
+                   data-testid="button-mobile-login"
+                 >
+                   Sign In
                  </Button>
               ) : (
                  <Button variant="destructive" className="w-full justify-center" onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
@@ -193,8 +201,6 @@ export function Navbar() {
           </div>
         )}
       </nav>
-
-      <SignupModal open={isSignupOpen} onOpenChange={setIsSignupOpen} />
     </>
   );
 }

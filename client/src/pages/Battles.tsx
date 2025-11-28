@@ -6,8 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Filter, Coins, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { SignupModal } from "@/components/auth/SignupModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchBattles, createBattle, joinBattle } from "@/lib/api";
 
@@ -44,9 +42,8 @@ function isCompleteBattle(battle: FormattedBattle): battle is CompleteBattle {
 }
 
 export default function Battles() {
-  const { user, spendCoins } = useUser();
+  const { user, spendCoins, login } = useUser();
   const { toast } = useToast();
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
   const BATTLE_COST = 250;
   const BATTLE_JOIN_COST = 250;
   const queryClient = useQueryClient();
@@ -74,7 +71,7 @@ export default function Battles() {
 
   const handleStartBattle = async () => {
     if (!user) {
-      setIsSignupOpen(true);
+      login();
       return;
     }
 
@@ -119,7 +116,7 @@ export default function Battles() {
 
   const handleJoinBattle = async (battleId: number) => {
     if (!user) {
-      setIsSignupOpen(true);
+      login();
       return;
     }
 
@@ -346,7 +343,6 @@ export default function Battles() {
         </div>
       </main>
       <Footer />
-      <SignupModal open={isSignupOpen} onOpenChange={setIsSignupOpen} />
     </div>
   );
 }

@@ -8,7 +8,6 @@ import { fetchStripeProducts, createCheckoutSession, verifyPurchase, createPorta
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-import { SignupModal } from "@/components/auth/SignupModal";
 
 const MEMBERSHIP_FEATURES: Record<string, string[]> = {
   free: [
@@ -34,9 +33,8 @@ const MEMBERSHIP_FEATURES: Record<string, string[]> = {
 };
 
 export default function Store() {
-  const { user, refreshUser } = useUser();
+  const { user, refreshUser, login } = useUser();
   const { toast } = useToast();
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [processingPurchase, setProcessingPurchase] = useState(false);
 
   const { data: products, isLoading } = useQuery({
@@ -127,7 +125,7 @@ export default function Store() {
 
   const handlePurchase = (priceId: string, mode: 'subscription' | 'payment') => {
     if (!user) {
-      setIsSignupOpen(true);
+      login();
       return;
     }
     checkoutMutation.mutate({ priceId, mode });
@@ -332,7 +330,6 @@ export default function Store() {
         </div>
       </main>
       <Footer />
-      <SignupModal open={isSignupOpen} onOpenChange={setIsSignupOpen} />
     </div>
   );
 }
