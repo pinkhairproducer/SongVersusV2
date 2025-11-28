@@ -6,6 +6,7 @@ import {
   insertVoteSchema,
   insertCommentSchema,
   insertChatMessageSchema,
+  insertMessageSchema,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
@@ -170,6 +171,78 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.get("/api/notifications/:userId/count", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notification count" });
+    }
+  });
+
+  app.get("/api/messages/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.get("/api/messages/:userId/sent", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getSentMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sent messages" });
+    }
+  });
+
+  app.get("/api/messages/:userId/count", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch message count" });
+    }
+  });
+
+  app.post("/api/messages", async (req, res) => {
+    try {
+      const data = insertMessageSchema.parse(req.body);
+      const message = await storage.createMessage(data);
+      
+      const fromUser = await storage.getUser(data.fromUserId);
+      await storage.createNotification({
+        userId: data.toUserId,
+        fromUserId: data.fromUserId,
+        type: "message",
+        message: `${fromUser?.name || 'Someone'} sent you a message: "${data.subject}"`,
+      });
+
+      res.json(message);
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: fromZodError(error).toString() });
+      }
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.post("/api/messages/:id/read", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markMessageAsRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark message as read" });
     }
   });
 
