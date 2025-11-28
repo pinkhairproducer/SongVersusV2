@@ -72,10 +72,15 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      verified(null, user);
+    } catch (error) {
+      console.error("[auth] Error during verification:", error);
+      verified(error as Error);
+    }
   };
 
   const registeredStrategies = new Set<string>();
@@ -110,9 +115,22 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("[auth] Callback error:", err);
+        return res.redirect(`/?error=${encodeURIComponent(err.message || 'Authentication failed')}`);
+      }
+      if (!user) {
+        console.error("[auth] No user returned:", info);
+        return res.redirect("/api/login");
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error("[auth] Login error:", loginErr);
+          return res.redirect(`/?error=${encodeURIComponent(loginErr.message || 'Login failed')}`);
+        }
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
