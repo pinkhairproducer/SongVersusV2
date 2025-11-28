@@ -90,9 +90,11 @@ export interface IStorage {
 
   getMessages(userId: number): Promise<Array<Message & { fromUserName?: string | null; fromUserAvatar?: string | null }>>;
   getSentMessages(userId: number): Promise<Array<Message & { toUserName?: string | null; toUserAvatar?: string | null }>>;
+  getMessage(messageId: number): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(messageId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
+  getNotification(notificationId: number): Promise<Notification | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -474,6 +476,11 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getMessage(messageId: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, messageId));
+    return message || undefined;
+  }
+
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const [message] = await db.insert(messages).values(insertMessage).returning();
     return message;
@@ -489,6 +496,11 @@ export class DatabaseStorage implements IStorage {
       .from(messages)
       .where(sql`${messages.toUserId} = ${userId} AND ${messages.read} = false`);
     return result[0]?.count || 0;
+  }
+
+  async getNotification(notificationId: number): Promise<Notification | undefined> {
+    const [notification] = await db.select().from(notifications).where(eq(notifications.id, notificationId));
+    return notification || undefined;
   }
 }
 

@@ -14,6 +14,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import Profile from "@/pages/Profile";
 import UserProfile from "@/pages/UserProfile";
 import Notifications from "@/pages/Notifications";
+import Inbox from "@/pages/Inbox";
 import Settings from "@/pages/Settings";
 import MyBattles from "@/pages/MyBattles";
 
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/user/:id" component={UserProfile} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/inbox" component={Inbox} />
       <Route path="/settings" component={Settings} />
       <Route path="/my-battles" component={MyBattles} />
       <Route component={NotFound} />

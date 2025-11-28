@@ -144,9 +144,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/notifications/:userId", async (req, res) => {
+  app.get("/api/notifications/:userId", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const notifications = await storage.getNotifications(userId);
       res.json(notifications);
     } catch (error) {
@@ -154,9 +165,25 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/notifications/:id/read", async (req, res) => {
+  app.post("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const id = parseInt(req.params.id);
+      const notification = await storage.getNotification(id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      
+      if (authUser.id !== notification.userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       await storage.markNotificationAsRead(id);
       res.json({ success: true });
     } catch (error) {
@@ -164,9 +191,20 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/notifications/:userId/read-all", async (req, res) => {
+  app.post("/api/notifications/:userId/read-all", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       await storage.markAllNotificationsAsRead(userId);
       res.json({ success: true });
     } catch (error) {
@@ -174,9 +212,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/notifications/:userId/count", async (req, res) => {
+  app.get("/api/notifications/:userId/count", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const count = await storage.getUnreadNotificationCount(userId);
       res.json({ count });
     } catch (error) {
@@ -184,9 +233,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/messages/:userId", async (req, res) => {
+  app.get("/api/messages/:userId", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const messages = await storage.getMessages(userId);
       res.json(messages);
     } catch (error) {
@@ -194,9 +254,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/messages/:userId/sent", async (req, res) => {
+  app.get("/api/messages/:userId/sent", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const messages = await storage.getSentMessages(userId);
       res.json(messages);
     } catch (error) {
@@ -204,9 +275,20 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/messages/:userId/count", async (req, res) => {
+  app.get("/api/messages/:userId/count", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const userId = parseInt(req.params.userId);
+      if (authUser.id !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
@@ -214,17 +296,29 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/messages", async (req, res) => {
+  app.post("/api/messages", isAuthenticated, async (req: any, res) => {
     try {
-      const data = insertMessageSchema.parse(req.body);
-      const message = await storage.createMessage(data);
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
       
-      const fromUser = await storage.getUser(data.fromUserId);
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const data = insertMessageSchema.parse(req.body);
+      
+      const messageData = {
+        ...data,
+        fromUserId: authUser.id,
+      };
+
+      const message = await storage.createMessage(messageData);
+      
       await storage.createNotification({
         userId: data.toUserId,
-        fromUserId: data.fromUserId,
+        fromUserId: authUser.id,
         type: "message",
-        message: `${fromUser?.name || 'Someone'} sent you a message: "${data.subject}"`,
+        message: `${authUser.name || 'Someone'} sent you a message: "${data.subject}"`,
       });
 
       res.json(message);
@@ -236,9 +330,25 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/messages/:id/read", async (req, res) => {
+  app.post("/api/messages/:id/read", isAuthenticated, async (req: any, res) => {
     try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       const id = parseInt(req.params.id);
+      const message = await storage.getMessage(id);
+      if (!message) {
+        return res.status(404).json({ error: "Message not found" });
+      }
+      
+      if (authUser.id !== message.toUserId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
       await storage.markMessageAsRead(id);
       res.json({ success: true });
     } catch (error) {
