@@ -267,7 +267,8 @@ export async function registerRoutes(
         customerId = customer.id;
       }
 
-      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const domains = process.env.REPLIT_DOMAINS;
+      const baseUrl = domains ? `https://${domains.split(',')[0]}` : 'http://localhost:5000';
       
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
@@ -276,7 +277,10 @@ export async function registerRoutes(
         mode: mode || 'subscription',
         success_url: `${baseUrl}/store?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/store?canceled=true`,
-        metadata: { userId: user.id.toString() },
+        metadata: { 
+          userId: user.id.toString(),
+          mode: mode || 'subscription',
+        },
       });
 
       res.json({ url: session.url });
@@ -320,7 +324,8 @@ export async function registerRoutes(
       }
 
       const stripe = await getUncachableStripeClient();
-      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const domains = process.env.REPLIT_DOMAINS;
+      const baseUrl = domains ? `https://${domains.split(',')[0]}` : 'http://localhost:5000';
 
       const session = await stripe.billingPortal.sessions.create({
         customer: user.stripeCustomerId,
@@ -343,9 +348,14 @@ export async function registerRoutes(
       }
 
       const stripe = await getUncachableStripeClient();
+      
       const session = await stripe.checkout.sessions.retrieve(sessionId, {
         expand: ['line_items', 'line_items.data.price.product'],
       });
+
+      if (!session.metadata?.userId || parseInt(session.metadata.userId) !== userId) {
+        return res.status(403).json({ error: "Session does not belong to this user" });
+      }
 
       if (session.payment_status !== 'paid') {
         return res.status(400).json({ error: "Payment not completed" });
@@ -363,27 +373,46 @@ export async function registerRoutes(
       if (metadata.type === 'coins') {
         const coinAmount = parseInt(metadata.coinAmount || '0');
         if (coinAmount > 0) {
-          await storage.updateUserCoins(userId, user.coins + coinAmount);
+          const currentUser = await storage.getUser(userId);
+          if (!currentUser) {
+            return res.status(404).json({ error: "User not found" });
+          }
+          await storage.updateUserCoins(userId, currentUser.coins + coinAmount);
           return res.json({ 
             success: true, 
             type: 'coins', 
             amount: coinAmount,
-            newBalance: user.coins + coinAmount 
+            newBalance: currentUser.coins + coinAmount 
           });
         }
       }
 
       if (metadata.tier === 'pro' || metadata.tier === 'elite') {
         const subscriptionId = session.subscription as string;
+        const currentUser = await storage.getUser(userId);
+        if (!currentUser) {
+          return res.status(404).json({ error: "User not found" });
+        }
+        
+        if (currentUser.membership === metadata.tier) {
+          return res.json({ 
+            success: true, 
+            type: 'membership', 
+            tier: metadata.tier,
+            bonusCoins: 0,
+            alreadyApplied: true
+          });
+        }
+        
         await storage.updateUserStripeInfo(
           userId, 
-          user.stripeCustomerId, 
+          session.customer as string, 
           subscriptionId, 
           metadata.tier
         );
         
         const bonusCoins = metadata.tier === 'elite' ? 1500 : 500;
-        await storage.updateUserCoins(userId, user.coins + bonusCoins);
+        await storage.updateUserCoins(userId, currentUser.coins + bonusCoins);
         
         return res.json({ 
           success: true, 

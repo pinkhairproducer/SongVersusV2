@@ -9,6 +9,9 @@ interface User {
   xp: number;
   wins: number;
   avatar: string;
+  membership: "free" | "pro" | "elite";
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
 }
 
 interface UserContextType {

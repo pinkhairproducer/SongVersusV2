@@ -97,3 +97,72 @@ export async function sendChatMessage(userId: number, text: string): Promise<Cha
   if (!response.ok) throw new Error("Failed to send message");
   return response.json();
 }
+
+export interface StripeProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  metadata: Record<string, string>;
+  active: boolean;
+  prices: StripePrice[];
+}
+
+export interface StripePrice {
+  id: string;
+  product: string;
+  unit_amount: number;
+  currency: string;
+  recurring: { interval: string } | null;
+  active: boolean;
+  metadata: Record<string, string>;
+}
+
+export async function fetchStripeProducts(): Promise<StripeProduct[]> {
+  const response = await fetch("/api/stripe/products");
+  if (!response.ok) throw new Error("Failed to fetch products");
+  const data = await response.json();
+  return data.data;
+}
+
+export async function createCheckoutSession(priceId: string, userId: number, mode: 'subscription' | 'payment'): Promise<{ url: string }> {
+  const response = await fetch("/api/stripe/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ priceId, userId, mode }),
+  });
+  if (!response.ok) throw new Error("Failed to create checkout session");
+  return response.json();
+}
+
+export async function verifyPurchase(sessionId: string, userId: number): Promise<{
+  success: boolean;
+  type: string;
+  amount?: number;
+  newBalance?: number;
+  tier?: string;
+  bonusCoins?: number;
+}> {
+  const response = await fetch("/api/stripe/verify-purchase", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId, userId }),
+  });
+  if (!response.ok) throw new Error("Failed to verify purchase");
+  return response.json();
+}
+
+export async function fetchUserSubscription(userId: number): Promise<{ subscription: any; membership: string }> {
+  const response = await fetch(`/api/stripe/subscription/${userId}`);
+  if (!response.ok) throw new Error("Failed to fetch subscription");
+  return response.json();
+}
+
+export async function createPortalSession(userId: number): Promise<{ url: string }> {
+  const response = await fetch("/api/stripe/portal", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) throw new Error("Failed to create portal session");
+  return response.json();
+}

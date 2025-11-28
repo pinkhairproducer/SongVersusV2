@@ -120,14 +120,14 @@ export class DatabaseStorage implements IStorage {
     const result = await db.execute(
       sql`SELECT id, name, description, metadata, active FROM stripe.products WHERE active = ${active}`
     );
-    return result.rows as StripeProduct[];
+    return result.rows as unknown as StripeProduct[];
   }
 
   async listPrices(active: boolean = true): Promise<StripePrice[]> {
     const result = await db.execute(
       sql`SELECT id, product, unit_amount, currency, recurring, active, metadata FROM stripe.prices WHERE active = ${active}`
     );
-    return result.rows as StripePrice[];
+    return result.rows as unknown as StripePrice[];
   }
 
   async getProductsWithPrices(): Promise<Array<StripeProduct & { prices: StripePrice[] }>> {
