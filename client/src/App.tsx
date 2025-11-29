@@ -61,11 +61,9 @@ function AppContent() {
     sessionStorage.setItem("splash_seen", "true");
     setShowSplash(false);
     
-    // TODO: Re-enable class selection when authentication is stable
-    // if (user && !user.roleSelected) {
-    //   setShowClassSelection(true);
-    // } else 
-    if (user && !user.tutorialCompleted) {
+    if (user && !user.roleSelected) {
+      setShowClassSelection(true);
+    } else if (user && !user.tutorialCompleted) {
       setShowTutorial(true);
     }
   };
@@ -98,11 +96,9 @@ function AppContent() {
 
   useEffect(() => {
     if (user && !showSplash && !showClassSelection) {
-      // TODO: Re-enable class selection when authentication is stable
-      // if (!user.roleSelected) {
-      //   setShowClassSelection(true);
-      // } else 
-      if (!user.tutorialCompleted) {
+      if (!user.roleSelected) {
+        setShowClassSelection(true);
+      } else if (!user.tutorialCompleted) {
         const tutorialSeen = sessionStorage.getItem("tutorial_seen");
         if (!tutorialSeen) {
           setShowTutorial(true);

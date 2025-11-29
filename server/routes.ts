@@ -168,7 +168,7 @@ export async function registerRoutes(
   app.patch("/api/users/:id/role", isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { role } = req.body;
+      const { role, name } = req.body;
       
       if (!role || !["artist", "producer"].includes(role)) {
         return res.status(400).json({ error: "Invalid role. Must be 'artist' or 'producer'" });
@@ -185,11 +185,13 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
 
+      const displayName = name?.trim() || currentUser.name;
+
       const user = await storage.updateUserProfile(
         id, 
         currentUser.profileImageUrl || "", 
         currentUser.bio || "", 
-        currentUser.name, 
+        displayName, 
         role
       );
       res.json(user);
@@ -502,13 +504,35 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/battles", async (req, res) => {
+  app.post("/api/battles", isAuthenticated, async (req: any, res) => {
     try {
       console.log("Battle creation request body:", JSON.stringify(req.body));
       const data = insertBattleSchema.parse(req.body);
       console.log("Parsed battle data:", JSON.stringify(data));
+      
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      if (data.leftUserId && data.leftUserId !== authUser.id) {
+        return res.status(403).json({ error: "Cannot create battle for another user" });
+      }
+
+      const expectedType = authUser.role === "producer" ? "beat" : "song";
+      if (data.type !== expectedType) {
+        return res.status(400).json({ 
+          error: authUser.role === "producer" 
+            ? "Producers can only create Beat Battles" 
+            : "Artists can only create Song Battles" 
+        });
+      }
+      
       const battleData = {
         ...data,
+        leftUserId: authUser.id,
         status: "pending" as const,
       };
       const battle = await storage.createBattle(battleData);
@@ -522,12 +546,33 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/battles/:id/join", async (req, res) => {
+  app.post("/api/battles/:id/join", isAuthenticated, async (req: any, res) => {
     try {
       const battleId = parseInt(req.params.id);
-      const { userId, artist, track, audio } = req.body;
+      const { artist, track, audio } = req.body;
 
-      const battle = await storage.joinBattle(battleId, userId, artist, track, audio);
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      const existingBattle = await storage.getBattle(battleId);
+      if (!existingBattle) {
+        return res.status(404).json({ error: "Battle not found" });
+      }
+
+      const expectedType = authUser.role === "producer" ? "beat" : "song";
+      if (existingBattle.type !== expectedType) {
+        return res.status(400).json({ 
+          error: authUser.role === "producer" 
+            ? "Producers can only join Beat Battles" 
+            : "Artists can only join Song Battles" 
+        });
+      }
+
+      const battle = await storage.joinBattle(battleId, authUser.id, artist, track, audio);
       res.json(battle);
     } catch (error) {
       res.status(500).json({ error: "Failed to join battle" });

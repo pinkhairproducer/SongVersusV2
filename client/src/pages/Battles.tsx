@@ -59,8 +59,8 @@ export default function Battles() {
   });
 
   const joinBattleMutation = useMutation({
-    mutationFn: ({ battleId, artist, track, cover }: { battleId: number; artist: string; track: string; cover: string }) =>
-      joinBattle(battleId, user!.id, artist, track, cover),
+    mutationFn: ({ battleId, artist, track, audio }: { battleId: number; artist: string; track: string; audio: string }) =>
+      joinBattle(battleId, artist, track, audio),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["battles"] });
     },
@@ -74,9 +74,21 @@ export default function Battles() {
     setShowStartBattleDialog(true);
   };
 
-  const handleJoinBattle = async (battleId: number) => {
+  const handleJoinBattle = async (battleId: number, battleType: string) => {
     if (!user) {
       login();
+      return;
+    }
+
+    const userBattleType = user.role === "producer" ? "beat" : "song";
+    if (battleType !== userBattleType) {
+      toast({
+        title: "Wrong Battle Type",
+        description: user.role === "producer" 
+          ? "As a Producer, you can only join Beat Battles" 
+          : "As an Artist, you can only join Song Battles",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -97,7 +109,7 @@ export default function Battles() {
         battleId,
         artist: user.name || "Anonymous",
         track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
-        cover: randomCover,
+        audio: randomCover,
       });
 
       spendCoins(BATTLE_JOIN_COST);
@@ -235,8 +247,10 @@ export default function Battles() {
                 ) : (
                   openBattles.map((battle) => {
                     const isBeat = battle.type === "beat";
+                    const userBattleType = user?.role === "producer" ? "beat" : "song";
+                    const canJoin = !user || battle.type === userBattleType;
                     return (
-                      <div key={battle.id} className="relative bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-gold/50 transition-all duration-300 group">
+                      <div key={battle.id} className={`relative bg-sv-dark border overflow-hidden transition-all duration-300 group ${canJoin ? 'border-sv-gray hover:border-sv-gold/50' : 'border-sv-gray/50 opacity-60'}`}>
                         <div className="absolute top-0 right-0 bg-sv-gold text-black font-mono text-xs px-2 py-1 font-bold">
                           OPEN
                         </div>
@@ -268,13 +282,19 @@ export default function Battles() {
                           <h3 className="font-punk text-white truncate text-center">{battle.left.track}</h3>
                           <p className="text-sm text-gray-500 truncate mb-4 text-center font-hud">{battle.left.artist}</p>
                           
-                          <button
-                            className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
-                            onClick={() => handleJoinBattle(battle.id)}
-                            data-testid={`button-join-battle-${battle.id}`}
-                          >
-                            Join Battle ({BATTLE_JOIN_COST} Coins)
-                          </button>
+                          {canJoin ? (
+                            <button
+                              className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
+                              onClick={() => handleJoinBattle(battle.id, battle.type)}
+                              data-testid={`button-join-battle-${battle.id}`}
+                            >
+                              Join Battle ({BATTLE_JOIN_COST} Coins)
+                            </button>
+                          ) : (
+                            <div className="w-full py-3 text-center text-sm text-gray-500 border-2 border-sv-gray bg-sv-gray/20">
+                              {isBeat ? 'Producers Only' : 'Artists Only'}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
