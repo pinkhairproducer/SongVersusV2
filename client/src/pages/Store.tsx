@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Crown, Coins, Loader2, ExternalLink } from "lucide-react";
+import { Check, Crown, Coins, Loader2, ExternalLink, Plug } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchStripeProducts, createCheckoutSession, verifyPurchase, createPortalSession, type StripeProduct } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
@@ -271,7 +271,7 @@ export default function Store() {
           </div>
 
           {/* Coin Store */}
-          <div>
+          <div className="mb-24">
             <h2 className="text-2xl font-bold font-heading text-white mb-8 flex items-center gap-2">
               <Coins className="w-6 h-6 text-yellow-400" />
               Coin Store
@@ -325,6 +325,57 @@ export default function Store() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Plugins */}
+          <div>
+            <h2 className="text-2xl font-bold font-heading text-white mb-8 flex items-center gap-2">
+              <Plug className="w-6 h-6 text-fuchsia-400" />
+              Plugins
+            </h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="bg-card/50 border-fuchsia-500/30 backdrop-blur-sm relative overflow-hidden hover:border-fuchsia-500/50 transition-colors group">
+                <div className="absolute top-0 right-0 bg-fuchsia-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                  NEW
+                </div>
+                <CardHeader className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-fuchsia-500/20 to-violet-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-fuchsia-500/30 group-hover:scale-105 transition-transform">
+                    <span className="text-3xl font-black text-fuchsia-400">P</span>
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-white">PLUMPIFY</CardTitle>
+                  <CardDescription className="text-sm">
+                    Premium audio plugin to make your beats hit harder. Add warmth, punch, and presence to your mixes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0" />
+                      Instant low-end boost
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0" />
+                      Analog warmth saturation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0" />
+                      Works with any DAW
+                    </li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full font-bold bg-fuchsia-500 hover:bg-fuchsia-600 text-white"
+                    onClick={() => window.open('https://payhip.com/b/MPWUu', '_blank', 'noopener,noreferrer')}
+                    data-testid="button-buy-plumpify"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Get PLUMPIFY
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           </div>
 
         </div>
