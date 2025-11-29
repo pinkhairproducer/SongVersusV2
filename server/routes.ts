@@ -92,6 +92,32 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/objects/set-acl", isAuthenticated, async (req: any, res) => {
+    const { objectUrl, visibility } = req.body;
+    
+    if (!objectUrl) {
+      return res.status(400).json({ error: "objectUrl is required" });
+    }
+
+    const replitAuthId = req.user.claims.sub;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        objectUrl,
+        {
+          owner: replitAuthId,
+          visibility: visibility || "public",
+        }
+      );
+
+      res.status(200).json({ objectPath });
+    } catch (error) {
+      console.error("Error setting object ACL:", error);
+      res.status(500).json({ error: "Failed to set object ACL" });
+    }
+  });
+
   app.get("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { BattleCard } from "@/components/battle/BattleCard";
@@ -7,7 +8,8 @@ import { Filter, Coins, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchBattles, createBattle, joinBattle } from "@/lib/api";
+import { fetchBattles, joinBattle } from "@/lib/api";
+import { StartBattleDialog } from "@/components/battle/StartBattleDialog";
 
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
 import cover2 from "@assets/generated_images/dark_trap_music_album_art.png";
@@ -47,18 +49,12 @@ export default function Battles() {
   const BATTLE_COST = 250;
   const BATTLE_JOIN_COST = 250;
   const queryClient = useQueryClient();
+  const [showStartBattleDialog, setShowStartBattleDialog] = useState(false);
 
   const { data: battlesData, isLoading, refetch } = useQuery({
     queryKey: ["battles"],
     queryFn: fetchBattles,
     refetchInterval: 5000,
-  });
-
-  const createBattleMutation = useMutation({
-    mutationFn: createBattle,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["battles"] });
-    },
   });
 
   const joinBattleMutation = useMutation({
@@ -69,48 +65,12 @@ export default function Battles() {
     },
   });
 
-  const handleStartBattle = async () => {
+  const handleStartBattle = () => {
     if (!user) {
       login();
       return;
     }
-
-    if (user.coins < BATTLE_COST) {
-      toast({
-        title: "Not Enough Coins",
-        description: `You need ${BATTLE_COST} coins to start a battle. You only have ${user.coins} coins. Visit the store!`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const covers = [cover1, cover2, cover3, cover4];
-      const randomCover = covers[Math.floor(Math.random() * covers.length)];
-      
-      await createBattleMutation.mutateAsync({
-        type: user.role === "producer" ? "beat" : "song",
-        genre: "general",
-        leftArtist: user.name || "Anonymous",
-        leftTrack: `New ${user.role === "producer" ? "Beat" : "Song"}`,
-        leftAudio: randomCover,
-        leftUserId: user.id,
-        endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      });
-
-      spendCoins(BATTLE_COST);
-
-      toast({
-        title: "Battle Started!",
-        description: `You spent ${BATTLE_COST} coins to start a new battle. Waiting for opponent...`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create battle",
-        variant: "destructive",
-      });
-    }
+    setShowStartBattleDialog(true);
   };
 
   const handleJoinBattle = async (battleId: number) => {
@@ -348,6 +308,12 @@ export default function Battles() {
         </div>
       </main>
       <Footer />
+      
+      <StartBattleDialog
+        open={showStartBattleDialog}
+        onOpenChange={setShowStartBattleDialog}
+        battleCost={BATTLE_COST}
+      />
     </div>
   );
 }
