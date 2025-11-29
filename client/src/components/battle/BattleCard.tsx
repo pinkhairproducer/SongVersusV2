@@ -18,9 +18,10 @@ interface BattleCardProps {
   right: BattleSide;
   timeLeft: string;
   type?: string;
+  genre?: string;
 }
 
-export function BattleCard({ left, right, timeLeft, type = "beat" }: BattleCardProps) {
+export function BattleCard({ left, right, timeLeft, type = "beat", genre = "general" }: BattleCardProps) {
   const [playing, setPlaying] = useState<"left" | "right" | null>(null);
   const [displayTime, setDisplayTime] = useState(timeLeft);
   const totalVotes = left.votes + right.votes || 1;
@@ -66,16 +67,18 @@ export function BattleCard({ left, right, timeLeft, type = "beat" }: BattleCardP
     >
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between border-b border-sv-gray bg-sv-black/50">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-sv-pink animate-pulse" />
-          <span className="text-xs font-hud font-bold text-sv-pink uppercase tracking-widest">Live Battle</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 ${isBeat ? 'bg-sv-purple' : 'bg-sv-pink'} animate-pulse`} />
+            <span className={`text-xs font-hud font-bold uppercase tracking-widest ${isBeat ? 'text-sv-purple' : 'text-sv-pink'}`}>
+              {isBeat ? 'Beat Battle' : 'Song Battle'}
+            </span>
+          </div>
+          <span className="text-xs font-mono text-sv-gold bg-sv-gold/10 px-2 py-0.5 uppercase">
+            {genre}
+          </span>
         </div>
         <span className="text-xs font-mono text-gray-500">{displayTime}</span>
-      </div>
-
-      {/* Battle Type Tag */}
-      <div className={`absolute top-12 right-0 ${isBeat ? 'bg-sv-purple' : 'bg-sv-pink'} text-white font-mono text-xs px-2 py-1 font-bold uppercase z-20`}>
-        {isBeat ? 'BEAT' : 'SONG'}
       </div>
 
       {/* Battle Area */}

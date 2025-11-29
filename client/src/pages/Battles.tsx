@@ -29,6 +29,7 @@ interface BattleSide {
 interface FormattedBattle {
   id: number;
   type: string;
+  genre: string;
   timeLeft: string;
   left: BattleSide;
   right: BattleSide | null;
@@ -130,6 +131,7 @@ export default function Battles() {
       return {
         id: battle.id,
         type: battle.type,
+        genre: battle.genre || "general",
         timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
         left: {
           artist: battle.leftArtist,
@@ -153,6 +155,8 @@ export default function Battles() {
   const allFormattedBattles = formatBattles(battlesData) || [];
   const completeBattles = allFormattedBattles.filter(isCompleteBattle);
   const openBattles = allFormattedBattles.filter(b => b.canJoin);
+  const beatBattles = completeBattles.filter(b => b.type === "beat");
+  const songBattles = completeBattles.filter(b => b.type === "song");
 
   if (isLoading) {
     return (
@@ -217,9 +221,9 @@ export default function Battles() {
           <Tabs defaultValue="open" className="w-full">
             <TabsList className="bg-sv-dark border border-sv-gray p-1 mb-8 w-full md:w-auto flex-wrap h-auto">
               <TabsTrigger value="open" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-gold/20 data-[state=active]:text-sv-gold rounded-none">Open ({openBattles.length})</TabsTrigger>
-              <TabsTrigger value="all" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-pink/20 data-[state=active]:text-sv-pink rounded-none">All ({completeBattles.length})</TabsTrigger>
-              <TabsTrigger value="beats" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-purple/20 data-[state=active]:text-sv-purple rounded-none">Beats</TabsTrigger>
-              <TabsTrigger value="songs" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-pink/20 data-[state=active]:text-sv-pink rounded-none">Songs</TabsTrigger>
+              <TabsTrigger value="all" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-none">All ({completeBattles.length})</TabsTrigger>
+              <TabsTrigger value="beats" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-purple/20 data-[state=active]:text-sv-purple rounded-none">Beats ({beatBattles.length})</TabsTrigger>
+              <TabsTrigger value="songs" className="flex-1 md:flex-none font-hud uppercase tracking-widest data-[state=active]:bg-sv-pink/20 data-[state=active]:text-sv-pink rounded-none">Songs ({songBattles.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="open" className="mt-0">
@@ -229,41 +233,52 @@ export default function Battles() {
                     <p className="text-gray-500 font-body">No open battles right now. Start one to get the party going!</p>
                   </div>
                 ) : (
-                  openBattles.map((battle) => (
-                    <div key={battle.id} className="relative bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-gold/50 transition-all duration-300 group">
-                      <div className="absolute top-0 right-0 bg-sv-gold text-black font-mono text-xs px-2 py-1 font-bold">
-                        OPEN
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-xs font-hud font-bold text-sv-gold uppercase tracking-widest flex items-center gap-2">
-                            <div className="w-2 h-2 bg-sv-gold animate-pulse" />
-                            Waiting for Opponent
-                          </span>
-                          <span className="text-xs font-mono text-gray-500">{battle.timeLeft}</span>
+                  openBattles.map((battle) => {
+                    const isBeat = battle.type === "beat";
+                    return (
+                      <div key={battle.id} className="relative bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-gold/50 transition-all duration-300 group">
+                        <div className="absolute top-0 right-0 bg-sv-gold text-black font-mono text-xs px-2 py-1 font-bold">
+                          OPEN
                         </div>
-                        
-                        <div className="relative aspect-square flex items-center justify-center mb-4">
-                          <AudioOrb 
-                            isPlaying={false} 
-                            color={battle.type === "beat" ? "purple" : "pink"} 
-                            size="lg"
-                          />
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 ${isBeat ? 'bg-sv-purple' : 'bg-sv-pink'} animate-pulse`} />
+                              <span className={`text-xs font-hud font-bold uppercase tracking-widest ${isBeat ? 'text-sv-purple' : 'text-sv-pink'}`}>
+                                {isBeat ? 'Beat Battle' : 'Song Battle'}
+                              </span>
+                            </div>
+                            <span className="text-xs font-mono text-gray-500">{battle.timeLeft}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-center mb-3">
+                            <span className="text-xs font-mono text-sv-gold bg-sv-gold/10 px-2 py-0.5 uppercase">
+                              {battle.genre}
+                            </span>
+                          </div>
+                          
+                          <div className="relative aspect-square flex items-center justify-center mb-4">
+                            <AudioOrb 
+                              isPlaying={false} 
+                              color={isBeat ? "purple" : "pink"} 
+                              size="lg"
+                            />
+                          </div>
+                          
+                          <h3 className="font-punk text-white truncate text-center">{battle.left.track}</h3>
+                          <p className="text-sm text-gray-500 truncate mb-4 text-center font-hud">{battle.left.artist}</p>
+                          
+                          <button
+                            className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
+                            onClick={() => handleJoinBattle(battle.id)}
+                            data-testid={`button-join-battle-${battle.id}`}
+                          >
+                            Join Battle ({BATTLE_JOIN_COST} Coins)
+                          </button>
                         </div>
-                        
-                        <h3 className="font-punk text-white truncate text-center">{battle.left.track}</h3>
-                        <p className="text-sm text-gray-500 truncate mb-4 text-center font-hud">{battle.left.artist}</p>
-                        
-                        <button
-                          className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
-                          onClick={() => handleJoinBattle(battle.id)}
-                          data-testid={`button-join-battle-${battle.id}`}
-                        >
-                          Join Battle ({BATTLE_JOIN_COST} Coins)
-                        </button>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </TabsContent>
@@ -282,25 +297,37 @@ export default function Battles() {
             
             <TabsContent value="beats" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {completeBattles.filter(b => b.type === "beat").map((battle) => (
-                  <Link key={battle.id} href={`/battle/${battle.id}`}>
-                    <div className="cursor-pointer">
-                      <BattleCard {...battle} />
-                    </div>
-                  </Link>
-                ))}
+                {beatBattles.length === 0 ? (
+                  <div className="col-span-full text-center py-12 bg-sv-dark border border-sv-gray">
+                    <p className="text-gray-500 font-body">No beat battles in progress. Start one if you're a producer!</p>
+                  </div>
+                ) : (
+                  beatBattles.map((battle) => (
+                    <Link key={battle.id} href={`/battle/${battle.id}`}>
+                      <div className="cursor-pointer">
+                        <BattleCard {...battle} />
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="songs" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {completeBattles.filter(b => b.type === "song").map((battle) => (
-                  <Link key={battle.id} href={`/battle/${battle.id}`}>
-                     <div className="cursor-pointer">
-                      <BattleCard {...battle} />
-                    </div>
-                  </Link>
-                ))}
+                {songBattles.length === 0 ? (
+                  <div className="col-span-full text-center py-12 bg-sv-dark border border-sv-gray">
+                    <p className="text-gray-500 font-body">No song battles in progress. Start one if you're an artist!</p>
+                  </div>
+                ) : (
+                  songBattles.map((battle) => (
+                    <Link key={battle.id} href={`/battle/${battle.id}`}>
+                      <div className="cursor-pointer">
+                        <BattleCard {...battle} />
+                      </div>
+                    </Link>
+                  ))
+                )}
               </div>
             </TabsContent>
           </Tabs>
