@@ -102,8 +102,10 @@ export interface IStorage {
 
   getAllCustomizations(): Promise<Customization[]>;
   getCustomizationsByCategory(category: string): Promise<Customization[]>;
+  getCustomization(id: number): Promise<Customization | undefined>;
   getUserCustomizations(userId: number): Promise<Array<Customization & { unlockedAt: Date }>>;
   unlockCustomization(userId: number, customizationId: number): Promise<UserCustomization>;
+  buyCustomization(userId: number, customizationId: number): Promise<{ success: boolean; error?: string; newBalance?: number }>;
   hasCustomization(userId: number, customizationId: number): Promise<boolean>;
   equipCustomization(userId: number, category: string, customizationId: number): Promise<User>;
   updateUserLevel(userId: number, level: number): Promise<void>;
@@ -558,6 +560,37 @@ export class DatabaseStorage implements IStorage {
   async unlockCustomization(userId: number, customizationId: number): Promise<UserCustomization> {
     const [unlock] = await db.insert(userCustomizations).values({ userId, customizationId }).returning();
     return unlock;
+  }
+
+  async getCustomization(id: number): Promise<Customization | undefined> {
+    const [customization] = await db.select().from(customizations).where(eq(customizations.id, id));
+    return customization || undefined;
+  }
+
+  async buyCustomization(userId: number, customizationId: number): Promise<{ success: boolean; error?: string; newBalance?: number }> {
+    const user = await this.getUser(userId);
+    if (!user) return { success: false, error: "User not found" };
+
+    const customization = await this.getCustomization(customizationId);
+    if (!customization) return { success: false, error: "Customization not found" };
+
+    const alreadyOwned = await this.hasCustomization(userId, customizationId);
+    if (alreadyOwned) return { success: false, error: "You already own this customization" };
+
+    if (customization.requiredLevel && user.level < customization.requiredLevel) {
+      return { success: false, error: `Requires level ${customization.requiredLevel}` };
+    }
+
+    const cost = customization.coinCost || 0;
+    if (user.coins < cost) {
+      return { success: false, error: `Not enough coins. Need ${cost}, have ${user.coins}` };
+    }
+
+    const newBalance = user.coins - cost;
+    await db.update(users).set({ coins: newBalance }).where(eq(users.id, userId));
+    await this.unlockCustomization(userId, customizationId);
+
+    return { success: true, newBalance };
   }
 
   async hasCustomization(userId: number, customizationId: number): Promise<boolean> {

@@ -968,6 +968,29 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/customizations/:id/purchase", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const customizationId = parseInt(req.params.id);
+      const result = await storage.buyCustomization(authUser.id, customizationId);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      res.json({ success: true, newBalance: result.newBalance });
+    } catch (error) {
+      console.error("Error purchasing customization:", error);
+      res.status(500).json({ error: "Failed to purchase customization" });
+    }
+  });
+
   app.post("/api/tutorial/complete", isAuthenticated, async (req: any, res) => {
     try {
       const replitAuthId = req.user.claims.sub;

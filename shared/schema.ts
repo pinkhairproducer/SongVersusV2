@@ -130,7 +130,9 @@ export const userCustomizations = pgTable("user_customizations", {
   userId: integer("user_id").notNull().references(() => users.id),
   customizationId: integer("customization_id").notNull().references(() => customizations.id),
   unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("user_customization_unique").on(table.userId, table.customizationId),
+]);
 
 export type User = typeof users.$inferSelect;
 export type UpsertUser = {
