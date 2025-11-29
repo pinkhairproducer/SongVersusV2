@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, MessageCircle, Clock, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AudioReactiveSphere } from "@/components/battle/AudioReactiveSphere";
+import { AudioPlayer } from "@/components/battle/AudioPlayer";
 import { ProfileCard } from "@/components/battle/ProfileCard";
 import { motion } from "framer-motion";
 import { useRoute } from "wouter";
@@ -100,6 +101,22 @@ export default function BattleDetail() {
     }
     voteMutation.mutate(side);
   };
+
+  const handleLeftPlayStateChange = useCallback((isPlaying: boolean) => {
+    if (isPlaying) {
+      setPlaying("left");
+    } else if (playing === "left") {
+      setPlaying(null);
+    }
+  }, [playing]);
+
+  const handleRightPlayStateChange = useCallback((isPlaying: boolean) => {
+    if (isPlaying) {
+      setPlaying("right");
+    } else if (playing === "right") {
+      setPlaying(null);
+    }
+  }, [playing]);
 
   const handleComment = () => {
     if (!user) {
@@ -197,26 +214,31 @@ export default function BattleDetail() {
                 />
               </div>
               
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{battle.leftTrack}</h2>
-                    <p className="text-lg text-violet-400 font-medium">{battle.leftArtist}</p>
-                  </div>
-                  <Button 
-                    size="lg" 
-                    className={cn(
-                      "rounded-full font-bold text-md px-8 transition-all",
-                      voted === "left" ? "bg-violet-500 text-white" : "bg-white/5 hover:bg-violet-500/20 text-white border border-white/10"
-                    )}
-                    onClick={() => handleVote("left")}
-                    disabled={!!voted}
-                    data-testid="button-vote-left"
-                  >
-                    <Heart className={cn("w-5 h-5 mr-2", voted === "left" && "fill-current")} />
-                    {voted === "left" ? "Voted" : "Vote"}
-                  </Button>
-                </div>
+              {battle.leftAudio && (
+                <AudioPlayer
+                  audioUrl={battle.leftAudio}
+                  trackName={battle.leftTrack}
+                  artistName={battle.leftArtist}
+                  color="cyan"
+                  isPlaying={playing === "left"}
+                  onPlayStateChange={handleLeftPlayStateChange}
+                />
+              )}
+
+              <div className="flex items-center justify-center mt-4">
+                <Button 
+                  size="lg" 
+                  className={cn(
+                    "rounded-full font-bold text-md px-8 transition-all",
+                    voted === "left" ? "bg-violet-500 text-white" : "bg-white/5 hover:bg-violet-500/20 text-white border border-white/10"
+                  )}
+                  onClick={() => handleVote("left")}
+                  disabled={!!voted}
+                  data-testid="button-vote-left"
+                >
+                  <Heart className={cn("w-5 h-5 mr-2", voted === "left" && "fill-current")} />
+                  {voted === "left" ? "Voted" : "Vote"}
+                </Button>
               </div>
             </div>
 
@@ -245,26 +267,35 @@ export default function BattleDetail() {
                 />
               </div>
               
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{battle.rightTrack || "Waiting..."}</h2>
-                    <p className="text-lg text-fuchsia-400 font-medium">{battle.rightArtist || "Open Spot"}</p>
-                  </div>
-                  <Button 
-                    size="lg" 
-                     className={cn(
-                      "rounded-full font-bold text-md px-8 transition-all",
-                      voted === "right" ? "bg-fuchsia-500 text-white" : "bg-white/5 hover:bg-fuchsia-500/20 text-white border border-white/10"
-                    )}
-                    onClick={() => handleVote("right")}
-                    disabled={!!voted || !battle.rightArtist}
-                    data-testid="button-vote-right"
-                  >
-                    <Heart className={cn("w-5 h-5 mr-2", voted === "right" && "fill-current")} />
-                    {voted === "right" ? "Voted" : "Vote"}
-                  </Button>
+              {battle.rightAudio ? (
+                <AudioPlayer
+                  audioUrl={battle.rightAudio}
+                  trackName={battle.rightTrack || "Unknown Track"}
+                  artistName={battle.rightArtist || "Unknown Artist"}
+                  color="fuchsia"
+                  isPlaying={playing === "right"}
+                  onPlayStateChange={handleRightPlayStateChange}
+                />
+              ) : (
+                <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-center">
+                  <p className="text-gray-400">Waiting for opponent to join...</p>
                 </div>
+              )}
+
+              <div className="flex items-center justify-center mt-4">
+                <Button 
+                  size="lg" 
+                  className={cn(
+                    "rounded-full font-bold text-md px-8 transition-all",
+                    voted === "right" ? "bg-fuchsia-500 text-white" : "bg-white/5 hover:bg-fuchsia-500/20 text-white border border-white/10"
+                  )}
+                  onClick={() => handleVote("right")}
+                  disabled={!!voted || !battle.rightArtist}
+                  data-testid="button-vote-right"
+                >
+                  <Heart className={cn("w-5 h-5 mr-2", voted === "right" && "fill-current")} />
+                  {voted === "right" ? "Voted" : "Vote"}
+                </Button>
               </div>
             </div>
           </div>
