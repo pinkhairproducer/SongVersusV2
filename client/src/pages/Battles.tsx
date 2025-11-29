@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Filter, Coins, Loader2 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchBattles, joinBattle } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchBattles } from "@/lib/api";
 import { StartBattleDialog } from "@/components/battle/StartBattleDialog";
+import { JoinBattleDialog } from "@/components/battle/JoinBattleDialog";
 
 import cover1 from "@assets/generated_images/synthwave_geometric_album_art.png";
 import cover2 from "@assets/generated_images/dark_trap_music_album_art.png";
@@ -51,19 +52,19 @@ export default function Battles() {
   const BATTLE_JOIN_COST = 250;
   const queryClient = useQueryClient();
   const [showStartBattleDialog, setShowStartBattleDialog] = useState(false);
+  const [showJoinBattleDialog, setShowJoinBattleDialog] = useState(false);
+  const [selectedBattleToJoin, setSelectedBattleToJoin] = useState<{
+    id: number;
+    type: string;
+    genre: string;
+    opponentName: string;
+    opponentTrack: string;
+  } | null>(null);
 
   const { data: battlesData, isLoading, refetch } = useQuery({
     queryKey: ["battles"],
     queryFn: fetchBattles,
     refetchInterval: 5000,
-  });
-
-  const joinBattleMutation = useMutation({
-    mutationFn: ({ battleId, userId, artist, track, audio }: { battleId: number; userId: number; artist: string; track: string; audio: string }) =>
-      joinBattle(battleId, userId, artist, track, audio),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["battles"] });
-    },
   });
 
   const handleStartBattle = () => {
@@ -74,7 +75,7 @@ export default function Battles() {
     setShowStartBattleDialog(true);
   };
 
-  const handleJoinBattle = async (battleId: number, battleType: string) => {
+  const handleJoinBattle = (battleId: number, battleType: string, battleGenre: string, opponentName: string, opponentTrack: string) => {
     if (!user) {
       login();
       return;
@@ -101,31 +102,14 @@ export default function Battles() {
       return;
     }
 
-    try {
-      const covers = [cover1, cover2, cover3, cover4];
-      const randomCover = covers[Math.floor(Math.random() * covers.length)];
-      
-      await joinBattleMutation.mutateAsync({
-        battleId,
-        userId: user.id,
-        artist: user.name || "Anonymous",
-        track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
-        audio: randomCover,
-      });
-
-      spendCoins(BATTLE_JOIN_COST);
-
-      toast({
-        title: "Battle Joined!",
-        description: `You spent ${BATTLE_JOIN_COST} coins to join the battle!`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to join battle",
-        variant: "destructive",
-      });
-    }
+    setSelectedBattleToJoin({
+      id: battleId,
+      type: battleType,
+      genre: battleGenre,
+      opponentName,
+      opponentTrack,
+    });
+    setShowJoinBattleDialog(true);
   };
 
   const formatBattles = (battles: typeof battlesData): FormattedBattle[] => {
@@ -286,7 +270,7 @@ export default function Battles() {
                           {canJoin ? (
                             <button
                               className="w-full punk-btn font-punk text-sv-gold border-2 border-sv-gold py-3 hover:bg-sv-gold/10 transition-all sketch-border"
-                              onClick={() => handleJoinBattle(battle.id, battle.type)}
+                              onClick={() => handleJoinBattle(battle.id, battle.type, battle.genre, battle.left.artist, battle.left.track)}
                               data-testid={`button-join-battle-${battle.id}`}
                             >
                               Join Battle ({BATTLE_JOIN_COST} Coins)
@@ -362,6 +346,22 @@ export default function Battles() {
         onOpenChange={setShowStartBattleDialog}
         battleCost={BATTLE_COST}
       />
+
+      {selectedBattleToJoin && (
+        <JoinBattleDialog
+          open={showJoinBattleDialog}
+          onOpenChange={(open) => {
+            setShowJoinBattleDialog(open);
+            if (!open) setSelectedBattleToJoin(null);
+          }}
+          battleId={selectedBattleToJoin.id}
+          battleType={selectedBattleToJoin.type}
+          battleGenre={selectedBattleToJoin.genre}
+          opponentName={selectedBattleToJoin.opponentName}
+          opponentTrack={selectedBattleToJoin.opponentTrack}
+          battleCost={BATTLE_JOIN_COST}
+        />
+      )}
     </div>
   );
 }

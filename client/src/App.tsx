@@ -56,28 +56,38 @@ function AppContent() {
   });
   const [showTutorial, setShowTutorial] = useState(false);
   const [showClassSelection, setShowClassSelection] = useState(false);
+  const [classSelectionDone, setClassSelectionDone] = useState(() => {
+    return sessionStorage.getItem("class_selection_done") === "true";
+  });
+  const [tutorialDone, setTutorialDone] = useState(() => {
+    return sessionStorage.getItem("tutorial_seen") === "true";
+  });
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("splash_seen", "true");
     setShowSplash(false);
     
-    if (user && !user.roleSelected) {
+    if (user && !user.roleSelected && !classSelectionDone) {
       setShowClassSelection(true);
-    } else if (user && !user.tutorialCompleted) {
+    } else if (user && !user.tutorialCompleted && !tutorialDone) {
       setShowTutorial(true);
     }
   };
 
   const handleClassSelectionComplete = async () => {
     setShowClassSelection(false);
-    await refreshUser();
-    if (user && !user.tutorialCompleted) {
+    setClassSelectionDone(true);
+    sessionStorage.setItem("class_selection_done", "true");
+    const updatedUser = await refreshUser();
+    if (updatedUser && !updatedUser.tutorialCompleted && !tutorialDone) {
       setShowTutorial(true);
     }
   };
 
   const handleTutorialComplete = async () => {
     setShowTutorial(false);
+    setTutorialDone(true);
+    sessionStorage.setItem("tutorial_seen", "true");
     if (user) {
       try {
         await fetch("/api/tutorial/complete", {
@@ -92,20 +102,19 @@ function AppContent() {
 
   const handleTutorialSkip = () => {
     setShowTutorial(false);
+    setTutorialDone(true);
+    sessionStorage.setItem("tutorial_seen", "true");
   };
 
   useEffect(() => {
-    if (user && !showSplash && !showClassSelection) {
-      if (!user.roleSelected) {
+    if (user && !showSplash && !showClassSelection && !showTutorial) {
+      if (!user.roleSelected && !classSelectionDone) {
         setShowClassSelection(true);
-      } else if (!user.tutorialCompleted) {
-        const tutorialSeen = sessionStorage.getItem("tutorial_seen");
-        if (!tutorialSeen) {
-          setShowTutorial(true);
-        }
+      } else if (!user.tutorialCompleted && !tutorialDone) {
+        setShowTutorial(true);
       }
     }
-  }, [user, showSplash, showClassSelection]);
+  }, [user, showSplash, showClassSelection, showTutorial, classSelectionDone, tutorialDone]);
 
   return (
     <>
