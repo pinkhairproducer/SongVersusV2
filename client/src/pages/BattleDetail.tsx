@@ -206,7 +206,7 @@ export default function BattleDetail() {
                 />
               )}
               
-              <div className="relative aspect-square flex items-center justify-center">
+              <div className="relative aspect-square flex items-center justify-center overflow-hidden rounded-2xl">
                 <AudioReactiveSphere 
                   isPlaying={playing === "left"}
                   color="cyan"
@@ -259,7 +259,7 @@ export default function BattleDetail() {
                 />
               )}
               
-              <div className="relative aspect-square flex items-center justify-center">
+              <div className="relative aspect-square flex items-center justify-center overflow-hidden rounded-2xl">
                 <AudioReactiveSphere 
                   isPlaying={playing === "right"}
                   color="fuchsia"
