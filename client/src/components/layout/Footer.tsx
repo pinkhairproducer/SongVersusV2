@@ -36,7 +36,7 @@ export function Footer() {
           <div>
             <h4 className="text-sv-gold font-hud font-bold tracking-widest uppercase mb-4">Community</h4>
             <ul className="space-y-2 text-sm text-gray-400 font-hud">
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Discord Server</li>
+              <li><a href="https://discord.gg/pNdgdWqW4j" target="_blank" rel="noopener noreferrer" className="hover:text-sv-pink cursor-pointer transition-colors">Discord Server</a></li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Blog</li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Guidelines</li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Support</li>
