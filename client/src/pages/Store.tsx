@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Crown, Coins, Loader2, ExternalLink, Plug } from "lucide-react";
+import { Check, Crown, Coins, Loader2, ExternalLink, Plug, Palette, Sparkles, Circle, Frame } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchStripeProducts, createCheckoutSession, verifyPurchase, createPortalSession, type StripeProduct } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
@@ -21,13 +21,18 @@ const MEMBERSHIP_FEATURES: Record<string, string[]> = {
     "Pro Badge on profile",
     "Detailed battle analytics",
     "Priority support",
+    "Featured Artist/Producer spot",
+    "Host your own tournaments",
+    "Custom profile themes",
     "500 Monthly Bonus Coins"
   ],
   elite: [
     "Everything in Pro",
-    "Featured Artist spot",
-    "Host your own tournaments",
-    "Custom profile themes",
+    "Elite Badge on profile",
+    "Premium Featured spot",
+    "Priority tournament hosting",
+    "Exclusive profile themes",
+    "Early access to new features",
     "1500 Monthly Bonus Coins"
   ]
 };
@@ -328,7 +333,7 @@ export default function Store() {
           </div>
 
           {/* Plugins */}
-          <div>
+          <div className="mb-24">
             <h2 className="text-2xl font-bold font-heading text-white mb-8 flex items-center gap-2">
               <Plug className="w-6 h-6 text-fuchsia-400" />
               Plugins
@@ -376,6 +381,145 @@ export default function Store() {
                 </CardFooter>
               </Card>
             </div>
+          </div>
+
+          {/* Customizations */}
+          <div>
+            <h2 className="text-2xl font-bold font-heading text-white mb-8 flex items-center gap-2">
+              <Palette className="w-6 h-6 text-cyan-400" />
+              Customizations
+            </h2>
+            <p className="text-muted-foreground mb-8 -mt-4">
+              Personalize your battles and profile with unique visual effects.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Profile Plates */}
+              <Card className="bg-card/50 border-white/10 backdrop-blur-sm relative overflow-hidden hover:border-cyan-500/30 transition-colors group">
+                <CardHeader className="text-center pb-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-cyan-500/20 group-hover:scale-105 transition-transform">
+                    <Frame className="w-8 h-8 text-cyan-400" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-white">Profile Plates</CardTitle>
+                  <CardDescription className="text-xs">Custom frames for your profile card</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="flex flex-wrap gap-2 justify-center mb-3">
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-white/20"></span>
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 border-2 border-white/20"></span>
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 border-2 border-white/20"></span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">12 designs available</p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400"
+                    onClick={() => toast({ title: "Coming Soon!", description: "Profile plates will be available in Season 2." })}
+                    data-testid="button-browse-plates"
+                  >
+                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
+                    50 - 200 Coins
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Battle Effects */}
+              <Card className="bg-card/50 border-white/10 backdrop-blur-sm relative overflow-hidden hover:border-violet-500/30 transition-colors group">
+                <CardHeader className="text-center pb-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-violet-500/20 group-hover:scale-105 transition-transform">
+                    <Sparkles className="w-8 h-8 text-violet-400" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-white">Battle Effects</CardTitle>
+                  <CardDescription className="text-xs">Animated effects for your battles</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="flex flex-wrap gap-2 justify-center mb-3">
+                    <span className="text-lg">✨</span>
+                    <span className="text-lg">🔥</span>
+                    <span className="text-lg">⚡</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">8 effects available</p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-violet-500/30 hover:bg-violet-500/10 hover:text-violet-400"
+                    onClick={() => toast({ title: "Coming Soon!", description: "Battle effects will be available in Season 2." })}
+                    data-testid="button-browse-effects"
+                  >
+                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
+                    100 - 500 Coins
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Sphere Skins */}
+              <Card className="bg-card/50 border-white/10 backdrop-blur-sm relative overflow-hidden hover:border-fuchsia-500/30 transition-colors group">
+                <div className="absolute top-0 right-0 bg-fuchsia-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                  POPULAR
+                </div>
+                <CardHeader className="text-center pb-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-fuchsia-500/20 group-hover:scale-105 transition-transform">
+                    <Circle className="w-8 h-8 text-fuchsia-400" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-white">Sphere Skins</CardTitle>
+                  <CardDescription className="text-xs">Custom audio visualizer styles</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="flex flex-wrap gap-2 justify-center mb-3">
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-500 animate-pulse"></span>
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 animate-pulse"></span>
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-r from-red-500 to-orange-500 animate-pulse"></span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">10 skins available</p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-fuchsia-500/30 hover:bg-fuchsia-500/10 hover:text-fuchsia-400"
+                    onClick={() => toast({ title: "Coming Soon!", description: "Sphere skins will be available in Season 2." })}
+                    data-testid="button-browse-spheres"
+                  >
+                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
+                    150 - 400 Coins
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Profile Themes */}
+              <Card className="bg-card/50 border-white/10 backdrop-blur-sm relative overflow-hidden hover:border-yellow-500/30 transition-colors group">
+                <CardHeader className="text-center pb-2">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-500/20 to-amber-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 border border-yellow-500/20 group-hover:scale-105 transition-transform">
+                    <Palette className="w-8 h-8 text-yellow-400" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-white">Profile Themes</CardTitle>
+                  <CardDescription className="text-xs">Complete profile makeovers</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="flex flex-wrap gap-2 justify-center mb-3">
+                    <span className="w-8 h-4 rounded bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500"></span>
+                    <span className="w-8 h-4 rounded bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500"></span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">6 themes available</p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-400"
+                    onClick={() => toast({ title: "Coming Soon!", description: "Profile themes will be available in Season 2." })}
+                    data-testid="button-browse-themes"
+                  >
+                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
+                    300 - 800 Coins
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              Pro and Elite members get exclusive access to premium customizations. Coming in Season 2!
+            </p>
           </div>
 
         </div>
