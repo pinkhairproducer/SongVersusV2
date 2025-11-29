@@ -59,8 +59,8 @@ export default function Battles() {
   });
 
   const joinBattleMutation = useMutation({
-    mutationFn: ({ battleId, artist, track, audio }: { battleId: number; artist: string; track: string; audio: string }) =>
-      joinBattle(battleId, artist, track, audio),
+    mutationFn: ({ battleId, userId, artist, track, audio }: { battleId: number; userId: number; artist: string; track: string; audio: string }) =>
+      joinBattle(battleId, userId, artist, track, audio),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["battles"] });
     },
@@ -107,6 +107,7 @@ export default function Battles() {
       
       await joinBattleMutation.mutateAsync({
         battleId,
+        userId: user.id,
         artist: user.name || "Anonymous",
         track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
         audio: randomCover,

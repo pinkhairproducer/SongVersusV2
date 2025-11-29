@@ -49,12 +49,12 @@ export async function createBattle(data: {
   return response.json();
 }
 
-export async function joinBattle(battleId: number, artist: string, track: string, audio: string): Promise<Battle> {
+export async function joinBattle(battleId: number, userId: number, artist: string, track: string, audio: string): Promise<Battle> {
   const response = await fetch(`/api/battles/${battleId}/join`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ artist, track, audio }),
+    body: JSON.stringify({ userId, artist, track, audio }),
   });
   if (!response.ok) {
     const error = await response.json();
