@@ -148,11 +148,13 @@ export const insertBattleSchema = createInsertSchema(battles)
     status: true,
     leftVotes: true,
     rightVotes: true,
-    endsAt: true,
     rightArtist: true,
     rightTrack: true,
     rightAudio: true,
     rightUserId: true,
+  })
+  .extend({
+    endsAt: z.union([z.date(), z.string().transform((s) => new Date(s))]).optional(),
   });
 
 export const joinBattleSchema = z.object({

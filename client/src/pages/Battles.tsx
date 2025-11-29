@@ -91,7 +91,7 @@ export default function Battles() {
       await createBattleMutation.mutateAsync({
         type: user.role === "producer" ? "beat" : "song",
         genre: "general",
-        leftArtist: user.name,
+        leftArtist: user.name || "Anonymous",
         leftTrack: `New ${user.role === "producer" ? "Beat" : "Song"}`,
         leftAudio: randomCover,
         leftUserId: user.id,
@@ -134,7 +134,7 @@ export default function Battles() {
       
       await joinBattleMutation.mutateAsync({
         battleId,
-        artist: user.name,
+        artist: user.name || "Anonymous",
         track: `New ${user.role === "producer" ? "Beat" : "Song"}`,
         cover: randomCover,
       });
@@ -161,7 +161,7 @@ export default function Battles() {
     
     return battles.map((battle) => {
       const now = new Date();
-      const endsAt = new Date(battle.endsAt);
+      const endsAt = battle.endsAt ? new Date(battle.endsAt) : new Date(now.getTime() + 24 * 60 * 60 * 1000);
       const timeLeft = Math.max(0, endsAt.getTime() - now.getTime());
       const hours = Math.floor(timeLeft / (1000 * 60 * 60));
       const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));

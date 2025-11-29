@@ -478,7 +478,9 @@ export async function registerRoutes(
 
   app.post("/api/battles", async (req, res) => {
     try {
+      console.log("Battle creation request body:", JSON.stringify(req.body));
       const data = insertBattleSchema.parse(req.body);
+      console.log("Parsed battle data:", JSON.stringify(data));
       const battleData = {
         ...data,
         status: "pending" as const,
@@ -486,10 +488,11 @@ export async function registerRoutes(
       const battle = await storage.createBattle(battleData);
       res.json(battle);
     } catch (error: any) {
+      console.error("Battle creation error:", error);
       if (error.name === "ZodError") {
         return res.status(400).json({ error: fromZodError(error).toString() });
       }
-      res.status(500).json({ error: "Failed to create battle" });
+      res.status(500).json({ error: error.message || "Failed to create battle" });
     }
   });
 
