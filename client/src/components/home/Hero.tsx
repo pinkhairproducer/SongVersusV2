@@ -19,9 +19,9 @@ export function Hero() {
         />
       </div>
 
-      {/* Animated Background Blobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sv-pink/20 rounded-full blur-3xl animate-[blob_7s_infinite]"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sv-purple/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"></div>
+      {/* Animated Background Blobs - Hidden on mobile for performance */}
+      <div className="hidden md:block absolute top-1/4 left-1/4 w-96 h-96 bg-sv-pink/20 rounded-full blur-3xl animate-[blob_7s_infinite]"></div>
+      <div className="hidden md:block absolute bottom-1/4 right-1/4 w-96 h-96 bg-sv-purple/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"></div>
 
       {/* Content */}
       <div className="relative z-10 px-4 text-center max-w-5xl mx-auto">
