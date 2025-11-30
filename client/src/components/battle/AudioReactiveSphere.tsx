@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useShouldReduceMotion } from "@/hooks/useIsMobile";
 
 interface AudioReactiveSphereProps {
   isPlaying?: boolean;
@@ -18,6 +19,7 @@ export function AudioReactiveSphere({
   const animationRef = useRef<number>(0);
   const timeRef = useRef<number>(0);
   const [audioLevel, setAudioLevel] = useState(0);
+  const reduceMotion = useShouldReduceMotion();
 
   const colorPalettes = {
     cyan: {
@@ -43,7 +45,7 @@ export function AudioReactiveSphere({
   const palette = colorPalettes[color];
 
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || reduceMotion) {
       setAudioLevel(0);
       return;
     }
@@ -53,7 +55,7 @@ export function AudioReactiveSphere({
     }, 80);
 
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, reduceMotion]);
 
   const noise = useCallback((x: number, y: number, t: number) => {
     return (
@@ -195,14 +197,49 @@ export function AudioReactiveSphere({
       ctx.scale(dpr, dpr);
     }
 
-    animationRef.current = requestAnimationFrame(draw);
+    if (!reduceMotion) {
+      animationRef.current = requestAnimationFrame(draw);
+    } else {
+      draw();
+    }
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [size, draw]);
+  }, [size, draw, reduceMotion]);
+
+  const staticColorClasses = {
+    cyan: "from-cyan-500 to-cyan-300",
+    violet: "from-violet-500 to-violet-300", 
+    fuchsia: "from-fuchsia-500 to-fuchsia-300",
+  };
+
+  if (reduceMotion) {
+    return (
+      <div
+        className={cn(
+          "relative flex items-center justify-center",
+          className
+        )}
+        style={{ width: size, height: size }}
+      >
+        <div 
+          className={cn(
+            "rounded-full bg-gradient-to-br shadow-lg",
+            staticColorClasses[color]
+          )}
+          style={{ 
+            width: size * 0.8, 
+            height: size * 0.8,
+            boxShadow: `0 0 ${size * 0.2}px ${color === 'cyan' ? 'rgba(0,220,255,0.5)' : color === 'violet' ? 'rgba(139,92,246,0.5)' : 'rgba(236,72,153,0.5)'}`
+          }}
+          data-testid="audio-reactive-sphere"
+        />
+      </div>
+    );
+  }
 
   return (
     <div

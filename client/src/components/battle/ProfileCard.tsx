@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Trophy, Zap, Coins, Crown, Star, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "wouter";
@@ -70,10 +69,7 @@ export function ProfileCard({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: side === "left" ? -20 : 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.2 }}
+    <div
       className={`relative ${side === "right" ? "text-right" : "text-left"}`}
       data-testid={`profile-card-${side}`}
     >
@@ -127,6 +123,6 @@ export function ProfileCard({
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

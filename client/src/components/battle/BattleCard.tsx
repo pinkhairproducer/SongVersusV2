@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Play, Pause, BarChart2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { AudioOrb } from "./AudioOrb";
 import { cn } from "@/lib/utils";
+import { useShouldReduceMotion } from "@/hooks/useIsMobile";
 
 interface BattleSide {
   artist: string;
@@ -24,6 +24,7 @@ interface BattleCardProps {
 export function BattleCard({ left, right, timeLeft, type = "beat", genre = "general" }: BattleCardProps) {
   const [playing, setPlaying] = useState<"left" | "right" | null>(null);
   const [displayTime, setDisplayTime] = useState(timeLeft);
+  const reduceMotion = useShouldReduceMotion();
   const totalVotes = left.votes + right.votes || 1;
   const leftPercent = (left.votes / totalVotes) * 100;
   const rightPercent = (right.votes / totalVotes) * 100;
@@ -61,9 +62,11 @@ export function BattleCard({ left, right, timeLeft, type = "beat", genre = "gene
   const isBeat = type === "beat";
 
   return (
-    <motion.div 
-      whileHover={{ y: -4 }}
-      className="bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-pink/50 transition-all duration-300 group relative"
+    <div 
+      className={cn(
+        "bg-sv-dark border border-sv-gray overflow-hidden hover:border-sv-pink/50 transition-all duration-300 group relative",
+        !reduceMotion && "hover:-translate-y-1"
+      )}
     >
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between border-b border-sv-gray bg-sv-black/50">
@@ -163,15 +166,13 @@ export function BattleCard({ left, right, timeLeft, type = "beat", genre = "gene
           </span>
         </div>
         <div className="h-2 w-full bg-sv-gray overflow-hidden flex">
-          <motion.div 
-            initial={{ width: "50%" }}
-            animate={{ width: `${leftPercent}%` }}
-            className="h-full bg-sv-pink"
+          <div 
+            className="h-full bg-sv-pink transition-all duration-300"
+            style={{ width: `${leftPercent}%` }}
           />
-          <motion.div 
-            initial={{ width: "50%" }}
-            animate={{ width: `${rightPercent}%` }}
-            className="h-full bg-sv-purple"
+          <div 
+            className="h-full bg-sv-purple transition-all duration-300"
+            style={{ width: `${rightPercent}%` }}
           />
         </div>
         
@@ -215,6 +216,6 @@ export function BattleCard({ left, right, timeLeft, type = "beat", genre = "gene
           </span>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

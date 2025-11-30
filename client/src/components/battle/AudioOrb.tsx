@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useShouldReduceMotion } from "@/hooks/useIsMobile";
 
 interface AudioOrbProps {
   isPlaying?: boolean;
@@ -16,9 +17,10 @@ export function AudioOrb({
   className 
 }: AudioOrbProps) {
   const [audioLevels, setAudioLevels] = useState<number[]>([0.3, 0.5, 0.4, 0.6, 0.3]);
+  const reduceMotion = useShouldReduceMotion();
 
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || reduceMotion) {
       setAudioLevels([0.3, 0.5, 0.4, 0.6, 0.3]);
       return;
     }
@@ -30,7 +32,7 @@ export function AudioOrb({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, reduceMotion]);
 
   const colorClasses = {
     violet: {
@@ -82,90 +84,48 @@ export function AudioOrb({
 
   return (
     <div className={cn("relative flex items-center justify-center", sizeClass, className)}>
-      {/* Outer glow rings */}
-      <motion.div
+      {/* Outer glow rings - static on mobile */}
+      <div
         className={cn(
           "absolute inset-0 rounded-full border-2 opacity-30",
           colors.ring
         )}
-        animate={isPlaying ? {
-          scale: [1, 1.3, 1],
-          opacity: [0.3, 0.1, 0.3],
-        } : {}}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
       />
       
-      <motion.div
+      <div
         className={cn(
           "absolute inset-2 rounded-full border opacity-40",
           colors.ring
         )}
-        animate={isPlaying ? {
-          scale: [1, 1.2, 1],
-          opacity: [0.4, 0.2, 0.4],
-        } : {}}
-        transition={{
-          duration: 1.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.2,
-        }}
       />
 
-      {/* Main orb */}
-      <motion.div
+      {/* Main orb - static on mobile */}
+      <div
         className={cn(
           "absolute inset-4 rounded-full bg-gradient-to-br",
           colors.primary,
           isPlaying && `shadow-2xl ${colors.glow}`
         )}
-        animate={isPlaying ? {
-          scale: [1, 1.08, 1],
-        } : {
-          scale: [1, 1.02, 1],
-        }}
-        transition={{
-          duration: isPlaying ? 0.3 : 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
       />
 
       {/* Inner glow */}
-      <motion.div
+      <div
         className={cn(
-          "absolute inset-6 rounded-full bg-white/20 backdrop-blur-sm"
+          "absolute inset-6 rounded-full bg-white/20 backdrop-blur-sm",
+          isPlaying ? "opacity-30" : "opacity-20"
         )}
-        animate={isPlaying ? {
-          opacity: [0.2, 0.4, 0.2],
-        } : {
-          opacity: 0.2,
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
       />
 
-      {/* Audio visualizer bars (only when playing) */}
-      {isPlaying && (
+      {/* Audio visualizer bars - simplified on mobile */}
+      {isPlaying && !reduceMotion && (
         <div className="absolute inset-0 flex items-center justify-center gap-0.5">
           {audioLevels.map((level, i) => (
-            <motion.div
+            <div
               key={i}
               className={cn("w-1 rounded-full", colors.pulse)}
-              animate={{
+              style={{
                 height: `${level * 40}%`,
                 opacity: level,
-              }}
-              transition={{
-                duration: 0.1,
-                ease: "easeOut",
               }}
             />
           ))}
@@ -173,19 +133,11 @@ export function AudioOrb({
       )}
 
       {/* Center dot */}
-      <motion.div
-        className="absolute w-2 h-2 rounded-full bg-white"
-        animate={isPlaying ? {
-          scale: [1, 1.5, 1],
-          opacity: [0.8, 1, 0.8],
-        } : {
-          opacity: 0.6,
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+      <div
+        className={cn(
+          "absolute w-2 h-2 rounded-full bg-white",
+          isPlaying ? "opacity-100" : "opacity-60"
+        )}
       />
     </div>
   );
