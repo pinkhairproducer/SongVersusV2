@@ -20,6 +20,7 @@ import Settings from "@/pages/Settings";
 import MyBattles from "@/pages/MyBattles";
 import Customizations from "@/pages/Customizations";
 import Legal from "@/pages/Legal";
+import Support from "@/pages/Support";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Tutorial } from "@/components/Tutorial";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/my-battles" component={MyBattles} />
       <Route path="/customizations" component={Customizations} />
       <Route path="/legal/:type" component={Legal} />
+      <Route path="/support" component={Support} />
       <Route component={NotFound} />
     </Switch>
   );

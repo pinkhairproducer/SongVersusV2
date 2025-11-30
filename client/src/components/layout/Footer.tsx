@@ -1,6 +1,16 @@
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export function Footer() {
+  const { toast } = useToast();
+
+  const handleComingSoon = (feature: string) => {
+    toast({
+      title: "Coming Soon!",
+      description: `${feature} will be available soon. Stay tuned!`,
+    });
+  };
+
   return (
     <footer className="border-t border-sv-gray bg-sv-black py-12 relative overflow-hidden">
       {/* Cyber Grid Background */}
@@ -26,10 +36,10 @@ export function Footer() {
           <div>
             <h4 className="text-sv-gold font-hud font-bold tracking-widest uppercase mb-4">Platform</h4>
             <ul className="space-y-2 text-sm text-gray-400 font-hud">
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Active Battles</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Tournaments</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Leaderboards</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Pricing</li>
+              <li><Link href="/battles" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-battles">Active Battles</Link></li>
+              <li><button onClick={() => handleComingSoon("Tournaments")} className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="button-tournaments">Tournaments</button></li>
+              <li><Link href="/leaderboard" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-leaderboard">Leaderboards</Link></li>
+              <li><Link href="/store" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-pricing">Pricing</Link></li>
             </ul>
           </div>
 
@@ -39,7 +49,7 @@ export function Footer() {
               <li><a href="https://discord.gg/pNdgdWqW4j" target="_blank" rel="noopener noreferrer" className="hover:text-sv-pink cursor-pointer transition-colors">Discord Server</a></li>
               <li><Link href="/legal/guidelines" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-guidelines">Guidelines</Link></li>
               <li><Link href="/legal/ai" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-ai-rules">AI Rules</Link></li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Support</li>
+              <li><Link href="/support" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-support">Support</Link></li>
             </ul>
           </div>
 
