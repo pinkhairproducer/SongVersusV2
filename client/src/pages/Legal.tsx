@@ -26,6 +26,16 @@ const guidelinesContent = {
       ]
     },
     {
+      title: "2a. AI Content Rules",
+      items: [
+        "No fully AI-generated songs are allowed, except in specific tournament contexts. This ensures the community maintains creative integrity and fair competition.",
+        "AI vocals may be used in a production sense (e.g., backing harmonies, ad-libs, or texture layers), but the main performance must be human unless otherwise stated in tournament rules.",
+        "Songs that rely entirely on AI for vocals, lyrics, or production will be removed unless participating in an AI-allowed tournament.",
+        "Any use of AI must be disclosed in the submission metadata (e.g., \"Contains AI-generated backing vocals\").",
+        "Violations of AI content rules may result in removal of the song and/or account penalties."
+      ]
+    },
+    {
       title: "3. Battles & Challenges",
       items: [
         "Respect the competitive nature of SongVersus: critiques should be constructive. Personal attacks toward other participants are forbidden.",
@@ -38,7 +48,7 @@ const guidelinesContent = {
       title: "4. Intellectual Property",
       items: [
         "By uploading to SongVersus, you confirm you own the rights or have proper licenses for all submitted content.",
-        "SongVersus reserves the right to remove content that violates copyright laws or community standards.",
+        "SongVersus reserves the right to remove content that violates copyright laws, community standards, or AI content rules.",
         "Users retain ownership of their music but grant SongVersus permission to display, stream, and promote submissions on the platform."
       ]
     },
@@ -53,9 +63,9 @@ const guidelinesContent = {
     {
       title: "6. Moderation & Enforcement",
       items: [
-        "Violation of these rules may result in warnings, content removal, temporary bans, or permanent account suspension.",
+        "Violation of any rules may result in warnings, content removal, temporary bans, or permanent account suspension.",
         "Decisions by SongVersus moderators are final. Disputes will be reviewed fairly but respectfully.",
-        "Users can appeal moderation decisions through the official support channels."
+        "Users can appeal moderation decisions through official support channels."
       ]
     },
     {
@@ -67,10 +77,64 @@ const guidelinesContent = {
       ]
     },
     {
-      title: "8. Updates to Rules",
+      title: "8. AI & Tournaments Exception",
+      items: [
+        "Certain tournaments may allow fully AI-generated songs, but this will always be explicitly stated in the tournament rules.",
+        "Users entering these tournaments must follow the rules outlined for AI use in that specific competition.",
+        "Outside of tournaments, submissions must prioritize human creativity. AI can assist in production but cannot replace main creative elements."
+      ]
+    },
+    {
+      title: "9. Updates to Rules",
       items: [
         "SongVersus reserves the right to update rules and guidelines at any time. Users are responsible for reviewing them regularly.",
         "Major changes will be communicated via email or platform notifications."
+      ]
+    }
+  ]
+};
+
+const aiRulesContent = {
+  title: "AI Rules",
+  sections: [
+    {
+      title: "1. General AI Policy",
+      items: [
+        "Fully AI-generated songs are NOT allowed (except in tournaments).",
+        "AI vocals are allowed only for production purposes: backing harmonies, ad-libs, and vocal textures.",
+        "Main performance must always be human outside tournaments."
+      ]
+    },
+    {
+      title: "2. AI Usage Disclosure",
+      items: [
+        "Always disclose AI use in your submission metadata. Example: \"Contains AI-generated backing vocals\"",
+        "Failure to disclose may lead to song removal or account penalties."
+      ]
+    },
+    {
+      title: "3. Tournaments & Exceptions",
+      items: [
+        "Some tournaments may allow fully AI-generated songs.",
+        "Check the tournament rules carefully before submitting.",
+        "Outside of these tournaments, human creativity is required."
+      ]
+    },
+    {
+      title: "4. Best Practices",
+      items: [
+        "Use AI to enhance your music, not replace it.",
+        "Keep the main vocals, lyrics, and composition human.",
+        "Transparency is key: your listeners should know what is AI-generated."
+      ]
+    },
+    {
+      title: "5. Quick Reference",
+      items: [
+        "Fully AI-generated song: NOT allowed outside AI tournaments",
+        "AI backing vocals / production: ALLOWED (with disclosure)",
+        "Main vocals AI-generated: NOT allowed outside AI tournaments",
+        "AI-assisted instruments/effects: ALLOWED"
       ]
     }
   ]
@@ -282,6 +346,7 @@ const copyrightContent = {
 
 const contentMap: Record<string, typeof guidelinesContent> = {
   guidelines: guidelinesContent,
+  ai: aiRulesContent,
   privacy: privacyContent,
   terms: termsContent,
   copyright: copyrightContent

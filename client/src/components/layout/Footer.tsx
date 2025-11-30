@@ -37,8 +37,8 @@ export function Footer() {
             <h4 className="text-sv-gold font-hud font-bold tracking-widest uppercase mb-4">Community</h4>
             <ul className="space-y-2 text-sm text-gray-400 font-hud">
               <li><a href="https://discord.gg/pNdgdWqW4j" target="_blank" rel="noopener noreferrer" className="hover:text-sv-pink cursor-pointer transition-colors">Discord Server</a></li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Blog</li>
               <li><Link href="/legal/guidelines" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-guidelines">Guidelines</Link></li>
+              <li><Link href="/legal/ai" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-ai-rules">AI Rules</Link></li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Support</li>
             </ul>
           </div>
