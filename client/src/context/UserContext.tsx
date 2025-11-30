@@ -24,6 +24,7 @@ interface User {
   equippedPlate?: number | null;
   equippedAnimation?: number | null;
   equippedSphere?: number | null;
+  foundersBadge?: boolean;
 }
 
 interface UserContextType {

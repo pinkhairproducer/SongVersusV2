@@ -7,6 +7,8 @@ import { useUser } from "@/context/UserContext";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
+import { MembershipBadge } from "@/components/MembershipBadge";
+import { FoundersBadge } from "@/components/FoundersBadge";
 
 export default function Profile() {
   const { user } = useUser();
@@ -44,9 +46,13 @@ export default function Profile() {
                 <AvatarFallback>{user.name[0]}</AvatarFallback>
               </Avatar>
               
-              <h1 className="text-4xl font-bold text-white mb-2">{user.name}</h1>
+              <div className="flex items-center justify-center gap-3 mb-2 flex-wrap">
+                <h1 className="text-4xl font-bold text-white">{user.name}</h1>
+                {user.foundersBadge && <FoundersBadge size="md" />}
+                <MembershipBadge membership={user.membership} size="md" />
+              </div>
               <p className="text-violet-400 font-mono mb-6 capitalize">
-                {user.role === "producer" ? "🎛️ Producer" : "🎤 Artist"}
+                {user.role === "producer" ? "🎛️ Producer" : "🎤 Artist"} • Level {user.level}
               </p>
               {user.bio && (
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">{user.bio}</p>

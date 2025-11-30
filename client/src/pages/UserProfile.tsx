@@ -8,6 +8,7 @@ import { useUser } from "@/context/UserContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { MembershipBadge } from "@/components/MembershipBadge";
+import { FoundersBadge } from "@/components/FoundersBadge";
 
 export default function UserProfile() {
   const [, params] = useRoute("/user/:id");
@@ -145,8 +146,9 @@ export default function UserProfile() {
                 <AvatarFallback className="text-4xl font-bold">{(user.name || "?")[0]}</AvatarFallback>
               </Avatar>
 
-              <div className="flex items-center justify-center gap-3 mb-2">
+              <div className="flex items-center justify-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-4xl font-bold text-white">{user.name || "Unknown User"}</h1>
+                {user.foundersBadge && <FoundersBadge size="md" />}
                 <MembershipBadge membership={user.membership} size="md" />
               </div>
               <p className="text-violet-400 font-mono mb-2 capitalize">

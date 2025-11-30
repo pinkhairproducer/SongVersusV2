@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Zap, Coins, Crown, Star } from "lucide-react";
+import { Trophy, Zap, Coins, Crown, Star, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "wouter";
 
@@ -13,6 +13,7 @@ interface ProfileCardProps {
   wins?: number;
   coins?: number;
   membership?: string;
+  foundersBadge?: boolean;
   side: "left" | "right";
   isWinner?: boolean;
 }
@@ -27,9 +28,20 @@ export function ProfileCard({
   wins = 0,
   coins,
   membership = "free",
+  foundersBadge = false,
   side,
   isWinner = false,
 }: ProfileCardProps) {
+  const getFoundersBadge = () => {
+    if (!foundersBadge) return null;
+    return (
+      <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-sv-gold/30 to-sv-pink/30 border border-sv-gold rounded text-sv-gold text-xs font-bold animate-pulse" title="Founder">
+        <Shield className="w-3 h-3 fill-sv-gold/50" />
+        FOUNDER
+      </div>
+    );
+  };
+
   const getMembershipBadge = () => {
     if (membership === "elite") {
       return (
@@ -86,10 +98,11 @@ export function ProfileCard({
           </div>
 
           <div className={`flex flex-col ${side === "right" ? "items-end" : "items-start"}`}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-cyber text-white font-bold group-hover:text-sv-pink transition-colors">
                 {name || "Unknown"}
               </span>
+              {getFoundersBadge()}
               {getMembershipBadge()}
             </div>
             

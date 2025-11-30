@@ -629,6 +629,19 @@ export async function registerRoutes(
                 : "Artists can only create Song Battles" 
             });
           }
+          
+          const canBattleResult = await storage.canUserBattle(data.leftUserId);
+          if (!canBattleResult.canBattle) {
+            return res.status(403).json({ 
+              error: canBattleResult.reason,
+              needsMembership: true
+            });
+          }
+          
+          const BATTLE_COST = 250;
+          if (user.membership === 'free') {
+            await storage.updateUserCoins(data.leftUserId, user.coins - BATTLE_COST);
+          }
         }
       }
       
@@ -667,6 +680,19 @@ export async function registerRoutes(
                 ? "Producers can only join Beat Battles" 
                 : "Artists can only join Song Battles" 
             });
+          }
+          
+          const canBattleResult = await storage.canUserBattle(userId);
+          if (!canBattleResult.canBattle) {
+            return res.status(403).json({ 
+              error: canBattleResult.reason,
+              needsMembership: true
+            });
+          }
+          
+          const BATTLE_COST = 250;
+          if (user.membership === 'free') {
+            await storage.updateUserCoins(userId, user.coins - BATTLE_COST);
           }
         }
       }
@@ -935,11 +961,12 @@ export async function registerRoutes(
           });
         }
         
-        await storage.updateUserStripeInfo(
+        const updatedUser = await storage.updateUserStripeInfo(
           userId, 
           session.customer as string, 
           subscriptionId, 
-          metadata.tier
+          metadata.tier,
+          true
         );
         
         const bonusCoins = metadata.tier === 'elite' ? 1500 : 500;
@@ -949,7 +976,8 @@ export async function registerRoutes(
           success: true, 
           type: 'membership', 
           tier: metadata.tier,
-          bonusCoins 
+          bonusCoins,
+          isFounder: updatedUser.foundersBadge
         });
       }
 

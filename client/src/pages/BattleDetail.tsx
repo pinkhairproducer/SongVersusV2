@@ -201,6 +201,7 @@ export default function BattleDetail() {
                   xp={leftUser.xp || 0}
                   wins={leftUser.wins || 0}
                   membership={leftUser.membership || "free"}
+                  foundersBadge={leftUser.foundersBadge || false}
                   side="left"
                   isWinner={battle.status === "completed" && battle.leftVotes > battle.rightVotes}
                 />
@@ -254,6 +255,7 @@ export default function BattleDetail() {
                   xp={rightUser.xp || 0}
                   wins={rightUser.wins || 0}
                   membership={rightUser.membership || "free"}
+                  foundersBadge={rightUser.foundersBadge || false}
                   side="right"
                   isWinner={battle.status === "completed" && battle.rightVotes > battle.leftVotes}
                 />

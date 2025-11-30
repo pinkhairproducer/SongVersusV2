@@ -60,8 +60,10 @@ export interface IStorage {
   updateUserCoins(id: number, coins: number): Promise<void>;
   updateUserStats(id: number, xp: number, wins: number): Promise<void>;
   updateUserProfile(id: number, profileImageUrl: string, bio: string, name?: string, role?: string): Promise<User>;
-  updateUserStripeInfo(id: number, stripeCustomerId: string | null, stripeSubscriptionId: string | null, membership: string): Promise<User>;
+  updateUserStripeInfo(id: number, stripeCustomerId: string | null, stripeSubscriptionId: string | null, membership: string, isNewPurchase?: boolean): Promise<User>;
   getLeaderboard(limit?: number): Promise<User[]>;
+  countFounders(): Promise<number>;
+  canUserBattle(userId: number): Promise<{ canBattle: boolean; reason?: string }>;
 
   listProducts(active?: boolean): Promise<StripeProduct[]>;
   listPrices(active?: boolean): Promise<StripePrice[]>;
@@ -190,11 +192,26 @@ export class DatabaseStorage implements IStorage {
     id: number, 
     stripeCustomerId: string | null, 
     stripeSubscriptionId: string | null, 
-    membership: string
+    membership: string,
+    isNewPurchase: boolean = false
   ): Promise<User> {
+    const updateData: any = { stripeCustomerId, stripeSubscriptionId, membership };
+    
+    if (isNewPurchase && (membership === 'pro' || membership === 'elite')) {
+      const currentUser = await this.getUser(id);
+      if (currentUser && !currentUser.membershipPurchasedAt) {
+        updateData.membershipPurchasedAt = new Date();
+        
+        const founderCount = await this.countFounders();
+        if (founderCount < 10) {
+          updateData.foundersBadge = true;
+        }
+      }
+    }
+    
     const [user] = await db
       .update(users)
-      .set({ stripeCustomerId, stripeSubscriptionId, membership })
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return user;
@@ -202,6 +219,36 @@ export class DatabaseStorage implements IStorage {
 
   async getLeaderboard(limit: number = 100): Promise<User[]> {
     return await db.select().from(users).orderBy(desc(users.xp)).limit(limit);
+  }
+
+  async countFounders(): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.foundersBadge, true));
+    return Number(result[0]?.count || 0);
+  }
+
+  async canUserBattle(userId: number): Promise<{ canBattle: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canBattle: false, reason: "User not found" };
+    }
+
+    const BATTLE_COST = 250;
+
+    if (user.membership === 'pro' || user.membership === 'elite') {
+      return { canBattle: true };
+    }
+
+    if (user.coins >= BATTLE_COST) {
+      return { canBattle: true };
+    }
+
+    return { 
+      canBattle: false, 
+      reason: "You need at least 250 coins to battle. Purchase a membership for unlimited battles!" 
+    };
   }
 
   async listProducts(active: boolean = true): Promise<StripeProduct[]> {

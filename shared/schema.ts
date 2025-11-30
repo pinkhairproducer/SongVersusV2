@@ -36,6 +36,8 @@ export const users = pgTable("users", {
   equippedAnimationId: integer("equipped_animation_id"),
   equippedSphereId: integer("equipped_sphere_id"),
   tutorialCompleted: boolean("tutorial_completed").notNull().default(false),
+  foundersBadge: boolean("founders_badge").notNull().default(false),
+  membershipPurchasedAt: timestamp("membership_purchased_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
