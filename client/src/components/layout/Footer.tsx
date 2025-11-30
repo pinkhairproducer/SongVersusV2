@@ -38,7 +38,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-gray-400 font-hud">
               <li><a href="https://discord.gg/pNdgdWqW4j" target="_blank" rel="noopener noreferrer" className="hover:text-sv-pink cursor-pointer transition-colors">Discord Server</a></li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Blog</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Guidelines</li>
+              <li><Link href="/legal/guidelines" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-guidelines">Guidelines</Link></li>
               <li className="hover:text-sv-pink cursor-pointer transition-colors">Support</li>
             </ul>
           </div>
@@ -46,9 +46,9 @@ export function Footer() {
           <div>
             <h4 className="text-sv-gold font-hud font-bold tracking-widest uppercase mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-400 font-hud">
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Privacy Policy</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Terms of Service</li>
-              <li className="hover:text-sv-pink cursor-pointer transition-colors">Copyright</li>
+              <li><Link href="/legal/privacy" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-privacy">Privacy Policy</Link></li>
+              <li><Link href="/legal/terms" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-terms">Terms of Service</Link></li>
+              <li><Link href="/legal/copyright" className="hover:text-sv-pink cursor-pointer transition-colors" data-testid="link-copyright">Copyright</Link></li>
             </ul>
           </div>
         </div>

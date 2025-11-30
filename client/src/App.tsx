@@ -19,6 +19,7 @@ import Inbox from "@/pages/Inbox";
 import Settings from "@/pages/Settings";
 import MyBattles from "@/pages/MyBattles";
 import Customizations from "@/pages/Customizations";
+import Legal from "@/pages/Legal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Tutorial } from "@/components/Tutorial";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/my-battles" component={MyBattles} />
       <Route path="/customizations" component={Customizations} />
+      <Route path="/legal/:type" component={Legal} />
       <Route component={NotFound} />
     </Switch>
   );
