@@ -134,6 +134,30 @@ export const userCustomizations = pgTable("user_customizations", {
   index("user_customization_unique").on(table.userId, table.customizationId),
 ]);
 
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_verification_token").on(table.token),
+  index("idx_verification_user").on(table.userId),
+]);
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_reset_token").on(table.token),
+  index("idx_reset_user").on(table.userId),
+]);
+
 export type User = typeof users.$inferSelect;
 export type UpsertUser = {
   replitAuthId: string;
