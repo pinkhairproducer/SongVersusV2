@@ -232,8 +232,13 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
   try {
     const { client, fromEmail } = await getResendClient();
     
+    // Use Resend's test domain if no verified domain is configured
+    const senderEmail = fromEmail && !fromEmail.includes('gmail.com') && !fromEmail.includes('yahoo.com') 
+      ? fromEmail 
+      : 'SongVersus <onboarding@resend.dev>';
+    
     const { data, error } = await client.emails.send({
-      from: fromEmail || 'SongVersus <noreply@songversus.com>',
+      from: senderEmail,
       to: [to],
       subject,
       html,
