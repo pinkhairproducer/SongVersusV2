@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   replitAuthId: varchar("replit_auth_id").unique(),
   email: varchar("email").unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),

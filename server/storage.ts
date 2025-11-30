@@ -9,6 +9,8 @@ import {
   messages,
   customizations,
   userCustomizations,
+  emailVerificationTokens,
+  passwordResetTokens,
   type User,
   type UpsertUser,
   type Battle,
@@ -28,6 +30,7 @@ import {
   type Customization,
   type UserCustomization,
 } from "@shared/schema";
+import crypto from "crypto";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -628,6 +631,100 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role)).limit(50);
+  }
+
+  async createEmailVerificationToken(userId: number): Promise<string> {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.insert(emailVerificationTokens).values({
+      userId,
+      token,
+      expiresAt,
+    });
+
+    return token;
+  }
+
+  async verifyEmailToken(token: string): Promise<{ success: boolean; userId?: number; error?: string }> {
+    const [record] = await db
+      .select()
+      .from(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.token, token));
+
+    if (!record) {
+      return { success: false, error: "Invalid verification token" };
+    }
+
+    if (record.consumedAt) {
+      return { success: false, error: "Token has already been used" };
+    }
+
+    if (new Date() > record.expiresAt) {
+      return { success: false, error: "Token has expired" };
+    }
+
+    await db
+      .update(emailVerificationTokens)
+      .set({ consumedAt: new Date() })
+      .where(eq(emailVerificationTokens.id, record.id));
+
+    await db
+      .update(users)
+      .set({ emailVerified: true })
+      .where(eq(users.id, record.userId));
+
+    return { success: true, userId: record.userId };
+  }
+
+  async createPasswordResetToken(userId: number): Promise<string> {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await db.insert(passwordResetTokens).values({
+      userId,
+      token,
+      expiresAt,
+    });
+
+    return token;
+  }
+
+  async verifyPasswordResetToken(token: string): Promise<{ success: boolean; userId?: number; error?: string }> {
+    const [record] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+
+    if (!record) {
+      return { success: false, error: "Invalid reset token" };
+    }
+
+    if (record.consumedAt) {
+      return { success: false, error: "Token has already been used" };
+    }
+
+    if (new Date() > record.expiresAt) {
+      return { success: false, error: "Token has expired" };
+    }
+
+    await db
+      .update(passwordResetTokens)
+      .set({ consumedAt: new Date() })
+      .where(eq(passwordResetTokens.id, record.id));
+
+    return { success: true, userId: record.userId };
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async deleteExpiredTokens(): Promise<void> {
+    const now = new Date();
+    await db.delete(emailVerificationTokens).where(sql`${emailVerificationTokens.expiresAt} < ${now}`);
+    await db.delete(passwordResetTokens).where(sql`${passwordResetTokens.expiresAt} < ${now}`);
   }
 }
 

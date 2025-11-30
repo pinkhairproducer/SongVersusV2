@@ -39,8 +39,10 @@ export function Navbar() {
     queryKey: ["notifications", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const res = await fetch(`/api/notifications/${user.id}`);
-      return res.json();
+      const res = await fetch(`/api/notifications/${user.id}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!user?.id,
     refetchInterval: 30000,
@@ -50,9 +52,10 @@ export function Navbar() {
     queryKey: ["notificationCount", user?.id],
     queryFn: async () => {
       if (!user?.id) return 0;
-      const res = await fetch(`/api/notifications/${user.id}/count`);
+      const res = await fetch(`/api/notifications/${user.id}/count`, { credentials: 'include' });
+      if (!res.ok) return 0;
       const data = await res.json();
-      return data.count;
+      return data.count || 0;
     },
     enabled: !!user?.id,
     refetchInterval: 30000,

@@ -12,6 +12,7 @@ import { fromZodError } from "zod-validation-error";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -28,6 +29,113 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.post("/api/auth/resend-verification", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const user = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (!user.email) {
+        return res.status(400).json({ error: "No email associated with this account" });
+      }
+
+      const token = await storage.createEmailVerificationToken(user.id);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+      
+      const result = await sendVerificationEmail(
+        user.email,
+        verificationUrl,
+        user.firstName || user.name || 'User'
+      );
+
+      if (!result.success) {
+        return res.status(500).json({ error: result.error || "Failed to send verification email" });
+      }
+
+      res.json({ success: true, message: "Verification email sent" });
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      res.status(500).json({ error: "Failed to send verification email" });
+    }
+  });
+
+  app.get("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ error: "Invalid token" });
+      }
+
+      const result = await storage.verifyEmailToken(token);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      const user = await storage.getUser(result.userId!);
+      if (user) {
+        await sendWelcomeEmail(user.email!, user.firstName || user.name || 'User');
+      }
+
+      res.json({ success: true, message: "Email verified successfully" });
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      res.status(500).json({ error: "Failed to verify email" });
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.json({ success: true, message: "If an account exists with this email, a reset link has been sent" });
+      }
+
+      const token = await storage.createPasswordResetToken(user.id);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      
+      await sendPasswordResetEmail(
+        email,
+        resetUrl,
+        user.firstName || user.name || 'User'
+      );
+
+      res.json({ success: true, message: "If an account exists with this email, a reset link has been sent" });
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      res.status(500).json({ error: "Failed to send password reset email" });
+    }
+  });
+
+  app.post("/api/auth/verify-reset-token", async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ error: "Invalid token" });
+      }
+
+      const result = await storage.verifyPasswordResetToken(token);
+      res.json({ valid: result.success });
+    } catch (error) {
+      console.error("Error verifying reset token:", error);
+      res.status(500).json({ error: "Failed to verify token" });
     }
   });
 
