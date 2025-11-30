@@ -42,8 +42,8 @@ export default function Profile() {
             {/* Profile Header */}
             <div className="bg-card/50 border border-white/10 rounded-2xl p-8 text-center mb-8 backdrop-blur-sm">
               <Avatar className="w-32 h-32 border-4 border-violet-500 mx-auto mb-6">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
+                <AvatarImage src={user.profileImageUrl || undefined} />
+                <AvatarFallback>{user.name?.[0] || "?"}</AvatarFallback>
               </Avatar>
               
               <div className="flex items-center justify-center gap-3 mb-2 flex-wrap">
@@ -98,8 +98,9 @@ export default function Profile() {
               open={editOpen}
               onOpenChange={setEditOpen}
               userId={user.id}
-              currentAvatar={user.avatar}
+              currentAvatar={user.profileImageUrl || ""}
               currentBio={user.bio || ""}
+              userName={user.name || "User"}
             />
           </div>
         </div>

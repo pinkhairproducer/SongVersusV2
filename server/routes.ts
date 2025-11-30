@@ -262,11 +262,11 @@ export async function registerRoutes(
       const id = parseInt(req.params.id);
       const { profileImageUrl, bio, name, role } = req.body;
       
-      if (!profileImageUrl || bio === undefined) {
-        return res.status(400).json({ error: "Profile image URL and bio are required" });
+      if (bio === undefined) {
+        return res.status(400).json({ error: "Bio is required" });
       }
 
-      const user = await storage.updateUserProfile(id, profileImageUrl, bio, name, role);
+      const user = await storage.updateUserProfile(id, profileImageUrl || "", bio, name, role);
       res.json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to update profile" });
