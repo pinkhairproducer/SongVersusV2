@@ -66,7 +66,10 @@ export function EditProfileDialog({
     setIsUploading(true);
 
     try {
-      const response = await fetch("/api/uploads/get-url");
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to get upload URL");
       const { url } = await response.json();
 
@@ -81,7 +84,8 @@ export function EditProfileDialog({
       if (!uploadResponse.ok) throw new Error("Upload failed");
 
       const uploadedUrl = url.split("?")[0];
-      setAvatar(uploadedUrl);
+      const objectPath = uploadedUrl.replace(/^https?:\/\/[^\/]+/, "");
+      setAvatar(objectPath);
       toast({ title: "Image uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);
