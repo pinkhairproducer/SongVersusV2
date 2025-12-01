@@ -6,12 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Mail, Send, Inbox as InboxIcon, CheckCheck, UserPlus, Trophy, Bell, Search } from "lucide-react";
+import { Loader2, Mail, Send, Inbox as InboxIcon, CheckCheck, UserPlus, Trophy, Bell, Search, Swords, Check, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { AcceptBattleRequestDialog } from "@/components/AcceptBattleRequestDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: number;
@@ -46,10 +48,29 @@ interface User {
   profileImageUrl?: string;
 }
 
+interface BattleRequest {
+  id: number;
+  challengerId: number;
+  challengedId: number;
+  status: string;
+  battleType: string;
+  genre: string;
+  challengerTrack: string;
+  challengerAudio: string;
+  challengedTrack: string | null;
+  challengedAudio: string | null;
+  message: string | null;
+  expiresAt: string;
+  createdAt: string;
+  challengerName: string | null;
+  challengerAvatar: string | null;
+}
+
 export default function Inbox() {
   const { user } = useUser();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [composeOpen, setComposeOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +78,8 @@ export default function Inbox() {
   const [selectedRecipient, setSelectedRecipient] = useState<User | null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageContent, setMessageContent] = useState("");
+  const [selectedBattleRequest, setSelectedBattleRequest] = useState<BattleRequest | null>(null);
+  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
 
   if (!user) {
     return (
@@ -116,6 +139,41 @@ export default function Inbox() {
     enabled: recipientSearch.length >= 2,
   });
 
+  const { data: battleRequests = [], isLoading: battleRequestsLoading } = useQuery<BattleRequest[]>({
+    queryKey: ["pendingBattleRequests"],
+    queryFn: async () => {
+      const res = await fetch("/api/battle-requests/pending", { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    refetchInterval: 30000,
+  });
+
+  const declineBattleRequestMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const res = await fetch(`/api/battle-requests/${requestId}/decline`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to decline");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pendingBattleRequests"] });
+      toast({ title: "Battle request declined" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to decline",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const markAllNotificationsReadMutation = useMutation({
     mutationFn: async () => {
       await fetch(`/api/notifications/${user.id}/read-all`, { method: "POST" });
@@ -159,6 +217,9 @@ export default function Inbox() {
       case "follow": return <UserPlus className="w-4 h-4 text-sv-purple" />;
       case "message": return <Mail className="w-4 h-4 text-sv-pink" />;
       case "vote": return <Trophy className="w-4 h-4 text-sv-gold" />;
+      case "battle_request": return <Swords className="w-4 h-4 text-sv-pink" />;
+      case "battle_accepted": return <Check className="w-4 h-4 text-green-500" />;
+      case "battle_declined": return <X className="w-4 h-4 text-red-500" />;
       default: return <Bell className="w-4 h-4 text-gray-400" />;
     }
   };
@@ -340,9 +401,20 @@ export default function Inbox() {
                   data-testid="tab-notifications"
                 >
                   <Bell className="w-4 h-4 mr-2" />
-                  Notifications
+                  Alerts
                   {unreadNotifications > 0 && (
                     <span className="ml-2 bg-sv-gold text-black text-xs px-1.5 py-0.5 font-bold">{unreadNotifications}</span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="battles" 
+                  className="flex-1 rounded-none font-hud uppercase tracking-wider text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-sv-pink data-[state=active]:to-sv-purple data-[state=active]:text-white"
+                  data-testid="tab-battles"
+                >
+                  <Swords className="w-4 h-4 mr-2" />
+                  Battles
+                  {battleRequests.length > 0 && (
+                    <span className="ml-2 bg-sv-pink text-black text-xs px-1.5 py-0.5 font-bold">{battleRequests.length}</span>
                   )}
                 </TabsTrigger>
               </TabsList>
@@ -480,6 +552,76 @@ export default function Inbox() {
                   </div>
                 )}
               </TabsContent>
+
+              <TabsContent value="battles" className="mt-0">
+                {battleRequests.length === 0 ? (
+                  <div className="text-center py-16 border border-sv-gray/30 bg-sv-dark/50">
+                    <Swords className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400 font-body">No battle challenges</p>
+                    <p className="text-gray-500 text-sm mt-1 font-body">When someone challenges you to a battle, it will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {battleRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="p-4 border border-sv-pink/30 bg-sv-pink/5 rounded-none"
+                        data-testid={`battle-request-${request.id}`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <Avatar className="w-12 h-12 rounded-none border border-sv-purple/50 flex-shrink-0">
+                            <AvatarImage src={request.challengerAvatar || undefined} className="rounded-none" />
+                            <AvatarFallback className="rounded-none bg-sv-purple text-white font-punk">
+                              {(request.challengerName || "?")[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-cyber text-white">{request.challengerName || "Unknown"}</span>
+                              <span className="text-xs text-sv-pink font-hud uppercase">{request.battleType} Battle</span>
+                            </div>
+                            <p className="text-gray-300 text-sm font-body mb-1">
+                              Challenged you with: <span className="text-white font-medium">{request.challengerTrack}</span>
+                            </p>
+                            <p className="text-xs text-sv-purple font-hud capitalize mb-1">Genre: {request.genre}</p>
+                            {request.message && (
+                              <p className="text-sm text-gray-400 italic font-body">"{request.message}"</p>
+                            )}
+                            <p className="text-xs text-gray-500 font-hud mt-2">
+                              Expires {formatDistanceToNow(new Date(request.expiresAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-gradient-to-r from-sv-pink to-sv-purple text-white hover:opacity-90 font-cyber uppercase text-xs"
+                              onClick={() => {
+                                setSelectedBattleRequest(request);
+                                setAcceptDialogOpen(true);
+                              }}
+                              data-testid={`button-accept-battle-${request.id}`}
+                            >
+                              <Check className="w-3 h-3 mr-1" />
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-sv-gray text-gray-400 hover:text-white hover:border-white font-cyber uppercase text-xs"
+                              onClick={() => declineBattleRequestMutation.mutate(request.id)}
+                              disabled={declineBattleRequestMutation.isPending}
+                              data-testid={`button-decline-battle-${request.id}`}
+                            >
+                              <X className="w-3 h-3 mr-1" />
+                              Decline
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
 
             <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
@@ -528,6 +670,12 @@ export default function Inbox() {
         </div>
       </main>
       <Footer />
+
+      <AcceptBattleRequestDialog
+        open={acceptDialogOpen}
+        onOpenChange={setAcceptDialogOpen}
+        battleRequest={selectedBattleRequest}
+      />
     </div>
   );
 }
