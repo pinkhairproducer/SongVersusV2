@@ -266,9 +266,16 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Bio is required" });
       }
 
-      const user = await storage.updateUserProfile(id, profileImageUrl || "", bio, name, role);
+      let normalizedImageUrl = profileImageUrl || "";
+      if (profileImageUrl && profileImageUrl.startsWith("https://storage.googleapis.com/")) {
+        const objectStorageService = new ObjectStorageService();
+        normalizedImageUrl = objectStorageService.normalizeObjectEntityPath(profileImageUrl);
+      }
+
+      const user = await storage.updateUserProfile(id, normalizedImageUrl, bio, name, role);
       res.json(user);
     } catch (error) {
+      console.error("Error updating profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
     }
   });

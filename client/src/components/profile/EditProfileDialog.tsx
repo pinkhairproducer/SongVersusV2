@@ -84,8 +84,7 @@ export function EditProfileDialog({
       if (!uploadResponse.ok) throw new Error("Upload failed");
 
       const uploadedUrl = url.split("?")[0];
-      const objectPath = uploadedUrl.replace(/^https?:\/\/[^\/]+/, "");
-      setAvatar(objectPath);
+      setAvatar(uploadedUrl);
       toast({ title: "Image uploaded successfully" });
     } catch (error) {
       console.error("Upload error:", error);
