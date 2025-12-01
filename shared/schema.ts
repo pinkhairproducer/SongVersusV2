@@ -57,6 +57,7 @@ export const battles = pgTable("battles", {
   rightUserId: integer("right_user_id").references(() => users.id),
   leftVotes: integer("left_votes").notNull().default(0),
   rightVotes: integer("right_votes").notNull().default(0),
+  winner: text("winner"),
   endsAt: timestamp("ends_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
