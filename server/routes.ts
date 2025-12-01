@@ -142,8 +142,8 @@ export async function registerRoutes(
   app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      const url = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ url });
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Failed to get upload URL" });
@@ -482,6 +482,7 @@ export async function registerRoutes(
       const messages = await storage.getMessages(userId);
       res.json(messages);
     } catch (error) {
+      console.error("Error fetching messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
@@ -503,6 +504,7 @@ export async function registerRoutes(
       const messages = await storage.getSentMessages(userId);
       res.json(messages);
     } catch (error) {
+      console.error("Error fetching sent messages:", error);
       res.status(500).json({ error: "Failed to fetch sent messages" });
     }
   });

@@ -81,47 +81,33 @@ export default function Inbox() {
   const [selectedBattleRequest, setSelectedBattleRequest] = useState<BattleRequest | null>(null);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-sv-black flex flex-col">
-        <Navbar />
-        <main className="flex-grow pt-24 pb-20 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-400 mb-4 font-body">You need to login to view your inbox</p>
-            <Button onClick={() => setLocation("/")} className="cyber-btn bg-sv-pink text-black font-cyber">
-              Go Home
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
-    queryKey: ["messages", user.id],
+    queryKey: ["messages", user?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/messages/${user.id}`);
+      const res = await fetch(`/api/messages/${user!.id}`);
       return res.json();
     },
+    enabled: !!user,
     refetchInterval: 30000,
   });
 
   const { data: sentMessages = [], isLoading: sentLoading } = useQuery<Message[]>({
-    queryKey: ["sentMessages", user.id],
+    queryKey: ["sentMessages", user?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/messages/${user.id}/sent`);
+      const res = await fetch(`/api/messages/${user!.id}/sent`);
       return res.json();
     },
+    enabled: !!user,
     refetchInterval: 30000,
   });
 
   const { data: notifications = [], isLoading: notificationsLoading } = useQuery<Notification[]>({
-    queryKey: ["notifications", user.id],
+    queryKey: ["notifications", user?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/notifications/${user.id}`);
+      const res = await fetch(`/api/notifications/${user!.id}`);
       return res.json();
     },
+    enabled: !!user,
     refetchInterval: 30000,
   });
 
@@ -133,10 +119,10 @@ export default function Inbox() {
       const users = await res.json();
       return users.filter((u: User) => {
         const searchName = (u.name || "").toLowerCase();
-        return searchName.includes(recipientSearch.toLowerCase()) && u.id !== user.id && u.name;
+        return searchName.includes(recipientSearch.toLowerCase()) && u.id !== user?.id && u.name;
       }).slice(0, 5);
     },
-    enabled: recipientSearch.length >= 2,
+    enabled: !!user && recipientSearch.length >= 2,
   });
 
   const { data: battleRequests = [], isLoading: battleRequestsLoading } = useQuery<BattleRequest[]>({
@@ -146,6 +132,7 @@ export default function Inbox() {
       if (!res.ok) return [];
       return res.json();
     },
+    enabled: !!user,
     refetchInterval: 30000,
   });
 
@@ -176,6 +163,7 @@ export default function Inbox() {
 
   const markAllNotificationsReadMutation = useMutation({
     mutationFn: async () => {
+      if (!user) return;
       await fetch(`/api/notifications/${user.id}/read-all`, { method: "POST" });
     },
     onSuccess: () => {
@@ -195,6 +183,7 @@ export default function Inbox() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { toUserId: number; subject: string; content: string }) => {
+      if (!user) throw new Error("Not authenticated");
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,6 +200,23 @@ export default function Inbox() {
       setRecipientSearch("");
     },
   });
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-sv-black flex flex-col">
+        <Navbar />
+        <main className="flex-grow pt-24 pb-20 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-400 mb-4 font-body">You need to login to view your inbox</p>
+            <Button onClick={() => setLocation("/")} className="cyber-btn bg-sv-pink text-black font-cyber">
+              Go Home
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
