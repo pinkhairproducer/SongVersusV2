@@ -123,8 +123,8 @@ export interface IStorage {
 
   createBattleRequest(request: InsertBattleRequest): Promise<BattleRequest>;
   getBattleRequest(id: number): Promise<BattleRequest | undefined>;
-  getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string; challengerAvatar: string | null }>>;
-  getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string; challengedAvatar: string | null }>>;
+  getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string | null; challengerAvatar: string | null }>>;
+  getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string | null; challengedAvatar: string | null }>>;
   updateBattleRequestStatus(id: number, status: string, challengedTrack?: string, challengedAudio?: string): Promise<BattleRequest>;
   linkBattleToRequest(requestId: number, battleId: number): Promise<void>;
 }
@@ -794,7 +794,7 @@ export class DatabaseStorage implements IStorage {
     return battleRequest || undefined;
   }
 
-  async getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string; challengerAvatar: string | null }>> {
+  async getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string | null; challengerAvatar: string | null }>> {
     const result = await db
       .select({
         id: battleRequests.id,
@@ -822,7 +822,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string; challengedAvatar: string | null }>> {
+  async getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string | null; challengedAvatar: string | null }>> {
     const result = await db
       .select({
         id: battleRequests.id,

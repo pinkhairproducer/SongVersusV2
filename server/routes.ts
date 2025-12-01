@@ -1243,5 +1243,206 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/users/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      const users = await storage.searchUsers(query);
+      res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ error: "Failed to search users" });
+    }
+  });
+
+  app.post("/api/battle-requests", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { challengedId, battleType, genre, challengerTrack, challengerAudio, message } = req.body;
+
+      if (!challengedId || !battleType || !challengerTrack || !challengerAudio) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (challengedId === authUser.id) {
+        return res.status(400).json({ error: "Cannot challenge yourself" });
+      }
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      const battleRequest = await storage.createBattleRequest({
+        challengerId: authUser.id,
+        challengedId,
+        battleType,
+        genre: genre || 'general',
+        challengerTrack,
+        challengerAudio,
+        message: message || null,
+        expiresAt,
+      });
+
+      await storage.createNotification({
+        userId: challengedId,
+        fromUserId: authUser.id,
+        type: 'battle_request',
+        message: `${authUser.name || 'Someone'} challenged you to a ${battleType} battle!`,
+      });
+
+      res.json(battleRequest);
+    } catch (error) {
+      console.error("Error creating battle request:", error);
+      res.status(500).json({ error: "Failed to create battle request" });
+    }
+  });
+
+  app.get("/api/battle-requests/pending", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const requests = await storage.getPendingBattleRequests(authUser.id);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching pending battle requests:", error);
+      res.status(500).json({ error: "Failed to fetch pending battle requests" });
+    }
+  });
+
+  app.get("/api/battle-requests/sent", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const requests = await storage.getSentBattleRequests(authUser.id);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching sent battle requests:", error);
+      res.status(500).json({ error: "Failed to fetch sent battle requests" });
+    }
+  });
+
+  app.post("/api/battle-requests/:id/accept", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const { challengedTrack, challengedAudio } = req.body;
+
+      if (!challengedTrack || !challengedAudio) {
+        return res.status(400).json({ error: "Track name and audio are required" });
+      }
+
+      const battleRequest = await storage.getBattleRequest(requestId);
+      if (!battleRequest) {
+        return res.status(404).json({ error: "Battle request not found" });
+      }
+
+      if (battleRequest.challengedId !== authUser.id) {
+        return res.status(403).json({ error: "Not authorized to accept this request" });
+      }
+
+      if (battleRequest.status !== 'pending') {
+        return res.status(400).json({ error: "This request has already been processed" });
+      }
+
+      const challenger = await storage.getUser(battleRequest.challengerId);
+      if (!challenger) {
+        return res.status(404).json({ error: "Challenger not found" });
+      }
+
+      const battle = await storage.createBattle({
+        leftArtist: challenger.name || 'Unknown',
+        leftTrack: battleRequest.challengerTrack,
+        leftAudio: battleRequest.challengerAudio,
+        leftUserId: battleRequest.challengerId,
+        rightArtist: authUser.name || 'Unknown',
+        rightTrack: challengedTrack,
+        rightAudio: challengedAudio,
+        rightUserId: authUser.id,
+        status: 'active',
+        battleType: battleRequest.battleType,
+        genre: battleRequest.genre,
+        endsAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+      });
+
+      await storage.updateBattleRequestStatus(requestId, 'accepted', challengedTrack, challengedAudio);
+      await storage.linkBattleToRequest(requestId, battle.id);
+
+      await storage.createNotification({
+        userId: battleRequest.challengerId,
+        fromUserId: authUser.id,
+        type: 'battle_accepted',
+        battleId: battle.id,
+        message: `${authUser.name || 'Someone'} accepted your battle challenge! The battle is now live.`,
+      });
+
+      res.json({ battleRequest: await storage.getBattleRequest(requestId), battle });
+    } catch (error) {
+      console.error("Error accepting battle request:", error);
+      res.status(500).json({ error: "Failed to accept battle request" });
+    }
+  });
+
+  app.post("/api/battle-requests/:id/decline", isAuthenticated, async (req: any, res) => {
+    try {
+      const replitAuthId = req.user.claims.sub;
+      const authUser = await storage.getUserByReplitAuthId(replitAuthId);
+      
+      if (!authUser) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const requestId = parseInt(req.params.id);
+
+      const battleRequest = await storage.getBattleRequest(requestId);
+      if (!battleRequest) {
+        return res.status(404).json({ error: "Battle request not found" });
+      }
+
+      if (battleRequest.challengedId !== authUser.id) {
+        return res.status(403).json({ error: "Not authorized to decline this request" });
+      }
+
+      if (battleRequest.status !== 'pending') {
+        return res.status(400).json({ error: "This request has already been processed" });
+      }
+
+      const updatedRequest = await storage.updateBattleRequestStatus(requestId, 'declined');
+
+      await storage.createNotification({
+        userId: battleRequest.challengerId,
+        fromUserId: authUser.id,
+        type: 'battle_declined',
+        message: `${authUser.name || 'Someone'} declined your battle challenge.`,
+      });
+
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error declining battle request:", error);
+      res.status(500).json({ error: "Failed to decline battle request" });
+    }
+  });
+
   return httpServer;
 }
