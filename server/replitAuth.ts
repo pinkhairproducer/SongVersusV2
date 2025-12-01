@@ -66,6 +66,53 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+
+  // Local Development Bypass
+  if (!process.env.REPL_ID) {
+    console.log("[auth] Running in local mode. Using mock authentication.");
+
+    const mockUser = {
+      claims: {
+        sub: "local-dev-user",
+        email: "dev@local.com",
+        first_name: "Local",
+        last_name: "Dev",
+        profile_image_url: "https://via.placeholder.com/150",
+        exp: Math.floor(Date.now() / 1000) + 3600 * 24 // 1 day
+      },
+      access_token: "mock_access_token",
+      refresh_token: "mock_refresh_token",
+      expires_at: Math.floor(Date.now() / 1000) + 3600 * 24
+    };
+
+    // Ensure mock user exists in DB
+    try {
+      await upsertUser(mockUser.claims);
+    } catch (e) {
+      console.error("Failed to upsert mock user", e);
+    }
+
+    app.get("/api/login", (req, res) => {
+      req.login(mockUser, (err) => {
+        if (err) {
+          console.error("[auth] Mock login error:", err);
+          return res.redirect("/?error=login_failed");
+        }
+        res.redirect("/");
+      });
+    });
+
+    app.get("/api/logout", (req, res) => {
+      req.logout(() => {
+        res.redirect("/");
+      });
+    });
+
+    return;
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -101,9 +148,6 @@ export async function setupAuth(app: Express) {
       registeredStrategies.add(strategyName);
     }
   };
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
@@ -147,6 +191,13 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (!process.env.REPL_ID) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
