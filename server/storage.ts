@@ -75,6 +75,7 @@ export interface IStorage {
 
   getBattle(id: number): Promise<Battle | undefined>;
   getAllBattles(): Promise<Battle[]>;
+  finalizeExpiredBattles(): Promise<void>;
   createBattle(battle: InsertBattle): Promise<Battle>;
   createCompleteBattle(data: {
     leftArtist: string;
@@ -351,6 +352,54 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBattles(): Promise<Battle[]> {
     return await db.select().from(battles).orderBy(desc(battles.createdAt));
+  }
+
+  async finalizeExpiredBattles(): Promise<void> {
+    const now = new Date();
+    
+    const expiredBattles = await db
+      .select()
+      .from(battles)
+      .where(
+        sql`${battles.status} = 'active' AND ${battles.endsAt} IS NOT NULL AND ${battles.endsAt} <= ${now}`
+      );
+    
+    for (const battle of expiredBattles) {
+      let winner: string | null = null;
+      
+      if (battle.leftVotes > battle.rightVotes) {
+        winner = "left";
+      } else if (battle.rightVotes > battle.leftVotes) {
+        winner = "right";
+      } else {
+        winner = "tie";
+      }
+      
+      await db
+        .update(battles)
+        .set({ status: "completed", winner })
+        .where(eq(battles.id, battle.id));
+      
+      if (winner === "left" && battle.leftUserId) {
+        const leftUser = await this.getUser(battle.leftUserId);
+        if (leftUser) {
+          await this.updateUserStats(
+            battle.leftUserId,
+            leftUser.xp + 100,
+            leftUser.wins + 1
+          );
+        }
+      } else if (winner === "right" && battle.rightUserId) {
+        const rightUser = await this.getUser(battle.rightUserId);
+        if (rightUser) {
+          await this.updateUserStats(
+            battle.rightUserId,
+            rightUser.xp + 100,
+            rightUser.wins + 1
+          );
+        }
+      }
+    }
   }
 
   async createBattle(insertBattle: InsertBattle): Promise<Battle> {

@@ -599,6 +599,7 @@ export async function registerRoutes(
 
   app.get("/api/battles", async (req, res) => {
     try {
+      await storage.finalizeExpiredBattles();
       const battles = await storage.getAllBattles();
       res.json(battles);
     } catch (error) {
@@ -608,6 +609,7 @@ export async function registerRoutes(
 
   app.get("/api/battles/:id", async (req, res) => {
     try {
+      await storage.finalizeExpiredBattles();
       const id = parseInt(req.params.id);
       const battle = await storage.getBattle(id);
       

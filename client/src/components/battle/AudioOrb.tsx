@@ -5,7 +5,7 @@ import { useShouldReduceMotion } from "@/hooks/useIsMobile";
 
 interface AudioOrbProps {
   isPlaying?: boolean;
-  color?: "violet" | "fuchsia" | "blue" | "green" | "pink" | "purple";
+  color?: "violet" | "fuchsia" | "blue" | "green" | "pink" | "purple" | "gold";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -70,6 +70,12 @@ export function AudioOrb({
       glow: "shadow-[#A64BFF]/50",
       ring: "border-[#A64BFF]/30",
       pulse: "bg-[#A64BFF]",
+    },
+    gold: {
+      primary: "from-[#F6C844] to-[#ffd970]",
+      glow: "shadow-[#F6C844]/50",
+      ring: "border-[#F6C844]/30",
+      pulse: "bg-[#F6C844]",
     },
   };
 

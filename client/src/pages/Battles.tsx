@@ -32,6 +32,8 @@ interface FormattedBattle {
   type: string;
   genre: string;
   timeLeft: string;
+  status: string;
+  winner: string | null;
   left: BattleSide;
   right: BattleSide | null;
   canJoin: boolean;
@@ -130,6 +132,8 @@ export default function Battles() {
         type: battle.type,
         genre: battle.genre || "general",
         timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
+        status: battle.status,
+        winner: battle.winner || null,
         left: {
           artist: battle.leftArtist,
           track: battle.leftTrack,
@@ -144,7 +148,7 @@ export default function Battles() {
           votes: battle.rightVotes,
           isLeading: battle.rightVotes > battle.leftVotes,
         } : null,
-        canJoin: !battle.rightArtist,
+        canJoin: !battle.rightArtist && battle.status !== "completed",
       };
     });
   };
