@@ -11,6 +11,7 @@ import {
   userCustomizations,
   emailVerificationTokens,
   passwordResetTokens,
+  battleRequests,
   type User,
   type UpsertUser,
   type Battle,
@@ -29,6 +30,8 @@ import {
   type InsertMessage,
   type Customization,
   type UserCustomization,
+  type BattleRequest,
+  type InsertBattleRequest,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -117,6 +120,13 @@ export interface IStorage {
   completeTutorial(userId: number): Promise<void>;
   searchUsers(query: string): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
+
+  createBattleRequest(request: InsertBattleRequest): Promise<BattleRequest>;
+  getBattleRequest(id: number): Promise<BattleRequest | undefined>;
+  getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string; challengerAvatar: string | null }>>;
+  getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string; challengedAvatar: string | null }>>;
+  updateBattleRequestStatus(id: number, status: string, challengedTrack?: string, challengedAudio?: string): Promise<BattleRequest>;
+  linkBattleToRequest(requestId: number, battleId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -772,6 +782,84 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     await db.delete(emailVerificationTokens).where(sql`${emailVerificationTokens.expiresAt} < ${now}`);
     await db.delete(passwordResetTokens).where(sql`${passwordResetTokens.expiresAt} < ${now}`);
+  }
+
+  async createBattleRequest(request: InsertBattleRequest): Promise<BattleRequest> {
+    const [battleRequest] = await db.insert(battleRequests).values(request).returning();
+    return battleRequest;
+  }
+
+  async getBattleRequest(id: number): Promise<BattleRequest | undefined> {
+    const [battleRequest] = await db.select().from(battleRequests).where(eq(battleRequests.id, id));
+    return battleRequest || undefined;
+  }
+
+  async getPendingBattleRequests(userId: number): Promise<Array<BattleRequest & { challengerName: string; challengerAvatar: string | null }>> {
+    const result = await db
+      .select({
+        id: battleRequests.id,
+        challengerId: battleRequests.challengerId,
+        challengedId: battleRequests.challengedId,
+        status: battleRequests.status,
+        battleType: battleRequests.battleType,
+        genre: battleRequests.genre,
+        challengerTrack: battleRequests.challengerTrack,
+        challengerAudio: battleRequests.challengerAudio,
+        challengedTrack: battleRequests.challengedTrack,
+        challengedAudio: battleRequests.challengedAudio,
+        message: battleRequests.message,
+        battleId: battleRequests.battleId,
+        expiresAt: battleRequests.expiresAt,
+        createdAt: battleRequests.createdAt,
+        updatedAt: battleRequests.updatedAt,
+        challengerName: users.name,
+        challengerAvatar: users.profileImageUrl,
+      })
+      .from(battleRequests)
+      .innerJoin(users, eq(battleRequests.challengerId, users.id))
+      .where(sql`${battleRequests.challengedId} = ${userId} AND ${battleRequests.status} = 'pending'`)
+      .orderBy(desc(battleRequests.createdAt));
+    return result;
+  }
+
+  async getSentBattleRequests(userId: number): Promise<Array<BattleRequest & { challengedName: string; challengedAvatar: string | null }>> {
+    const result = await db
+      .select({
+        id: battleRequests.id,
+        challengerId: battleRequests.challengerId,
+        challengedId: battleRequests.challengedId,
+        status: battleRequests.status,
+        battleType: battleRequests.battleType,
+        genre: battleRequests.genre,
+        challengerTrack: battleRequests.challengerTrack,
+        challengerAudio: battleRequests.challengerAudio,
+        challengedTrack: battleRequests.challengedTrack,
+        challengedAudio: battleRequests.challengedAudio,
+        message: battleRequests.message,
+        battleId: battleRequests.battleId,
+        expiresAt: battleRequests.expiresAt,
+        createdAt: battleRequests.createdAt,
+        updatedAt: battleRequests.updatedAt,
+        challengedName: users.name,
+        challengedAvatar: users.profileImageUrl,
+      })
+      .from(battleRequests)
+      .innerJoin(users, eq(battleRequests.challengedId, users.id))
+      .where(eq(battleRequests.challengerId, userId))
+      .orderBy(desc(battleRequests.createdAt));
+    return result;
+  }
+
+  async updateBattleRequestStatus(id: number, status: string, challengedTrack?: string, challengedAudio?: string): Promise<BattleRequest> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (challengedTrack) updateData.challengedTrack = challengedTrack;
+    if (challengedAudio) updateData.challengedAudio = challengedAudio;
+    const [battleRequest] = await db.update(battleRequests).set(updateData).where(eq(battleRequests.id, id)).returning();
+    return battleRequest;
+  }
+
+  async linkBattleToRequest(requestId: number, battleId: number): Promise<void> {
+    await db.update(battleRequests).set({ battleId, updatedAt: new Date() }).where(eq(battleRequests.id, requestId));
   }
 }
 
