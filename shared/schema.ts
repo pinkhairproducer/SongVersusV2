@@ -161,6 +161,24 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   index("idx_reset_user").on(table.userId),
 ]);
 
+export const battleRequests = pgTable("battle_requests", {
+  id: serial("id").primaryKey(),
+  challengerId: integer("challenger_id").notNull().references(() => users.id),
+  challengedId: integer("challenged_id").notNull().references(() => users.id),
+  status: text("status").notNull().default("pending"),
+  battleType: text("battle_type").notNull(),
+  genre: text("genre").notNull().default("general"),
+  challengerTrack: text("challenger_track").notNull(),
+  challengerAudio: text("challenger_audio").notNull(),
+  challengedTrack: text("challenged_track"),
+  challengedAudio: text("challenged_audio"),
+  message: text("message"),
+  battleId: integer("battle_id").references(() => battles.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type UpsertUser = {
   replitAuthId: string;
@@ -259,3 +277,16 @@ export type InsertCustomization = z.infer<typeof insertCustomizationSchema>;
 
 export type UserCustomization = typeof userCustomizations.$inferSelect;
 export type InsertUserCustomization = z.infer<typeof insertUserCustomizationSchema>;
+
+export const insertBattleRequestSchema = createInsertSchema(battleRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  challengedTrack: true,
+  challengedAudio: true,
+  battleId: true,
+});
+
+export type BattleRequest = typeof battleRequests.$inferSelect;
+export type InsertBattleRequest = z.infer<typeof insertBattleRequestSchema>;
