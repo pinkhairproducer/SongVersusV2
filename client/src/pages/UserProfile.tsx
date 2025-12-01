@@ -1,19 +1,22 @@
+import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Trophy, Zap, Coins, TrendingUp, Loader2, Users, UserPlus } from "lucide-react";
+import { Trophy, Zap, Coins, TrendingUp, Loader2, Users, UserPlus, Swords } from "lucide-react";
 import { useRoute, useLocation } from "wouter";
 import { useUser } from "@/context/UserContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { MembershipBadge } from "@/components/MembershipBadge";
 import { FoundersBadge } from "@/components/FoundersBadge";
+import { ChallengeDialog } from "@/components/ChallengeDialog";
 
 export default function UserProfile() {
   const [, params] = useRoute("/user/:id");
   const [, setLocation] = useLocation();
   const { user: currentUser } = useUser();
+  const [showChallengeDialog, setShowChallengeDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const userId = parseInt(params?.id || "0");
@@ -186,20 +189,30 @@ export default function UserProfile() {
               </div>
 
               {!isOwnProfile && currentUser && (
-                <Button
-                  className={isFollowing ? "bg-white/20 border border-white/30 text-white hover:bg-white/30" : "bg-sv-pink text-black hover:bg-sv-pink/80"}
-                  onClick={() => {
-                    if (isFollowing) {
-                      unfollowMutation.mutate();
-                    } else {
-                      followMutation.mutate();
-                    }
-                  }}
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                  data-testid={isFollowing ? "button-unfollow" : "button-follow"}
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    className={isFollowing ? "bg-white/20 border border-white/30 text-white hover:bg-white/30" : "bg-sv-pink text-black hover:bg-sv-pink/80"}
+                    onClick={() => {
+                      if (isFollowing) {
+                        unfollowMutation.mutate();
+                      } else {
+                        followMutation.mutate();
+                      }
+                    }}
+                    disabled={followMutation.isPending || unfollowMutation.isPending}
+                    data-testid={isFollowing ? "button-unfollow" : "button-follow"}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                  <Button
+                    className="bg-gradient-to-r from-sv-purple to-sv-pink text-white hover:opacity-90"
+                    onClick={() => setShowChallengeDialog(true)}
+                    data-testid="button-challenge"
+                  >
+                    <Swords className="w-4 h-4 mr-2" />
+                    Challenge
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -227,6 +240,18 @@ export default function UserProfile() {
         </div>
       </main>
       <Footer />
+
+      {user && !isOwnProfile && (
+        <ChallengeDialog
+          open={showChallengeDialog}
+          onOpenChange={setShowChallengeDialog}
+          targetUser={{
+            id: user.id,
+            name: user.name || "Unknown User",
+            role: user.role || "artist",
+          }}
+        />
+      )}
     </div>
   );
 }

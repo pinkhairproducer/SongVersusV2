@@ -1371,7 +1371,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Challenger not found" });
       }
 
-      const battle = await storage.createBattle({
+      const battle = await storage.createCompleteBattle({
         leftArtist: challenger.name || 'Unknown',
         leftTrack: battleRequest.challengerTrack,
         leftAudio: battleRequest.challengerAudio,

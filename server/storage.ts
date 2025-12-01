@@ -76,6 +76,20 @@ export interface IStorage {
   getBattle(id: number): Promise<Battle | undefined>;
   getAllBattles(): Promise<Battle[]>;
   createBattle(battle: InsertBattle): Promise<Battle>;
+  createCompleteBattle(data: {
+    leftArtist: string;
+    leftTrack: string;
+    leftAudio: string;
+    leftUserId: number;
+    rightArtist: string;
+    rightTrack: string;
+    rightAudio: string;
+    rightUserId: number;
+    battleType: string;
+    genre: string;
+    status: string;
+    endsAt: Date;
+  }): Promise<Battle>;
   joinBattle(battleId: number, userId: number, artist: string, track: string, audio: string): Promise<Battle>;
   updateBattleVotes(battleId: number, side: "left" | "right", increment: number): Promise<void>;
 
@@ -341,6 +355,37 @@ export class DatabaseStorage implements IStorage {
 
   async createBattle(insertBattle: InsertBattle): Promise<Battle> {
     const [battle] = await db.insert(battles).values(insertBattle).returning();
+    return battle;
+  }
+
+  async createCompleteBattle(data: {
+    leftArtist: string;
+    leftTrack: string;
+    leftAudio: string;
+    leftUserId: number;
+    rightArtist: string;
+    rightTrack: string;
+    rightAudio: string;
+    rightUserId: number;
+    battleType: string;
+    genre: string;
+    status: string;
+    endsAt: Date;
+  }): Promise<Battle> {
+    const [battle] = await db.insert(battles).values({
+      type: data.battleType,
+      genre: data.genre,
+      status: data.status,
+      leftArtist: data.leftArtist,
+      leftTrack: data.leftTrack,
+      leftAudio: data.leftAudio,
+      leftUserId: data.leftUserId,
+      rightArtist: data.rightArtist,
+      rightTrack: data.rightTrack,
+      rightAudio: data.rightAudio,
+      rightUserId: data.rightUserId,
+      endsAt: data.endsAt,
+    }).returning();
     return battle;
   }
 
