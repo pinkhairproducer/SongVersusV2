@@ -135,16 +135,17 @@ function ProducerCard({ producer, currentUserId }: { producer: UserType; current
 
       <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
         <span className="text-xs font-medium text-muted-foreground">{producer.xp} XP</span>
-        <Link href={`/user/${producer.id}`}>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="h-8 border-white/10 hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/50 text-xs"
-            data-testid={`button-view-producer-${producer.id}`}
-          >
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="h-8 border-white/10 hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/50 text-xs"
+          data-testid={`button-view-producer-${producer.id}`}
+          asChild
+        >
+          <Link href={`/user/${producer.id}`}>
             <User className="w-3 h-3 mr-2" /> View Profile
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   );

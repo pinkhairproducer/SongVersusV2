@@ -135,16 +135,17 @@ function ArtistCard({ artist, currentUserId }: { artist: UserType; currentUserId
 
       <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
         <span className="text-xs font-medium text-muted-foreground">{artist.xp} XP</span>
-        <Link href={`/user/${artist.id}`}>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="h-8 border-white/10 hover:bg-fuchsia-500/20 hover:text-fuchsia-400 hover:border-fuchsia-500/50 text-xs"
-            data-testid={`button-view-artist-${artist.id}`}
-          >
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="h-8 border-white/10 hover:bg-fuchsia-500/20 hover:text-fuchsia-400 hover:border-fuchsia-500/50 text-xs"
+          data-testid={`button-view-artist-${artist.id}`}
+          asChild
+        >
+          <Link href={`/user/${artist.id}`}>
             <User className="w-3 h-3 mr-2" /> View Profile
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   );
