@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createBattle } from "@/lib/api";
 import { Loader2, Upload, Music, ChevronLeft, ChevronRight, Coins, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 const GENRES = [
   { id: "hip-hop", label: "Hip-Hop", icon: "🎤" },
@@ -33,6 +34,7 @@ export function StartBattleDialog({ open, onOpenChange, battleCost }: StartBattl
   const { user, spendCoins } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { playSound } = useSoundEffects();
   
   const [step, setStep] = useState<"genre" | "upload" | "confirm">("genre");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
@@ -157,6 +159,7 @@ export function StartBattleDialog({ open, onOpenChange, battleCost }: StartBattl
     if (!user || !selectedGenre || !audioUrl) return;
 
     if (user.coins < battleCost) {
+      playSound("error");
       toast({
         title: "Not Enough Coins",
         description: `You need ${battleCost} coins to start a battle.`,
@@ -177,6 +180,7 @@ export function StartBattleDialog({ open, onOpenChange, battleCost }: StartBattl
       });
 
       spendCoins(battleCost);
+      playSound("battleStart");
 
       toast({
         title: "Battle Started!",
@@ -185,6 +189,7 @@ export function StartBattleDialog({ open, onOpenChange, battleCost }: StartBattl
 
       handleClose();
     } catch (error: any) {
+      playSound("error");
       toast({
         title: "Error",
         description: error.message || "Failed to create battle",

@@ -9,14 +9,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchChatMessages, sendChatMessage } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 export function GlobalChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef<number>(0);
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { playSound } = useSoundEffects();
 
   const { data: messages } = useQuery({
     queryKey: ["chat"],
@@ -29,14 +32,29 @@ export function GlobalChat() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat"] });
       setInputText("");
+      playSound("chatMessage");
     },
     onError: () => {
       toast({
         title: "Failed to send message",
         variant: "destructive",
       });
+      playSound("error");
     },
   });
+
+  useEffect(() => {
+    if (messages && isOpen) {
+      const messageCount = messages.length;
+      if (prevMessageCountRef.current > 0 && messageCount > prevMessageCountRef.current) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage && lastMessage.userId !== user?.id) {
+          playSound("chatMessage");
+        }
+      }
+      prevMessageCountRef.current = messageCount;
+    }
+  }, [messages, isOpen, user?.id, playSound]);
 
   const handleSend = () => {
     if (!inputText.trim() || !user) return;

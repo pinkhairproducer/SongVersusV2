@@ -3,15 +3,61 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 import { useLocation } from "wouter";
-import { AlertCircle, LogOut, Camera } from "lucide-react";
+import { AlertCircle, LogOut, Camera, Volume2, VolumeX, Play } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { useSoundEffects, getSoundSettings, SOUND_EFFECT_LABELS, type SoundEffect } from "@/hooks/useSoundEffects";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 
 export default function Settings() {
   const { user, logout, refreshUser } = useUser();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { playSound, updateSettings, updateEffectSetting, getSettings } = useSoundEffects();
+  const [soundSettings, setSoundSettings] = useState(getSoundSettings);
+
+  useEffect(() => {
+    setSoundSettings(getSettings());
+  }, [getSettings]);
+
+  const handleMasterToggle = (enabled: boolean) => {
+    updateSettings({ enabled });
+    setSoundSettings(prev => ({ ...prev, enabled }));
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    const volume = value[0];
+    updateSettings({ volume });
+    setSoundSettings(prev => ({ ...prev, volume }));
+  };
+
+  const handleEffectToggle = (effect: SoundEffect, enabled: boolean) => {
+    updateEffectSetting(effect, enabled);
+    setSoundSettings(prev => ({
+      ...prev,
+      effects: { ...prev.effects, [effect]: enabled },
+    }));
+  };
+
+  const previewSound = (effect: SoundEffect) => {
+    const wasEnabled = soundSettings.enabled;
+    const effectWasEnabled = soundSettings.effects[effect];
+    
+    if (!wasEnabled) updateSettings({ enabled: true });
+    if (!effectWasEnabled) updateEffectSetting(effect, true);
+    
+    playSound(effect);
+    
+    if (!wasEnabled) {
+      setTimeout(() => updateSettings({ enabled: wasEnabled }), 100);
+    }
+    if (!effectWasEnabled) {
+      setTimeout(() => updateEffectSetting(effect, effectWasEnabled), 100);
+    }
+  };
 
   if (!user) {
     return (
@@ -124,6 +170,78 @@ export default function Settings() {
                     <p className="text-muted-foreground text-sm capitalize">
                       {user.role === "producer" ? "Producer" : "Artist"}
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sound Effects Section */}
+            <div className="bg-card/50 border border-white/10 rounded-2xl p-6 mb-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  {soundSettings.enabled ? (
+                    <Volume2 className="w-6 h-6 text-sv-pink" />
+                  ) : (
+                    <VolumeX className="w-6 h-6 text-muted-foreground" />
+                  )}
+                  <h2 className="text-xl font-bold text-white">Sound Effects</h2>
+                </div>
+                <Switch
+                  checked={soundSettings.enabled}
+                  onCheckedChange={handleMasterToggle}
+                  data-testid="switch-sound-master"
+                />
+              </div>
+
+              <div className={`space-y-6 ${!soundSettings.enabled ? "opacity-50 pointer-events-none" : ""}`}>
+                <div>
+                  <label className="text-sm font-medium text-white mb-3 block">
+                    Volume: {Math.round(soundSettings.volume * 100)}%
+                  </label>
+                  <Slider
+                    value={[soundSettings.volume]}
+                    onValueChange={handleVolumeChange}
+                    max={1}
+                    step={0.1}
+                    className="w-full"
+                    data-testid="slider-volume"
+                  />
+                </div>
+
+                <div className="border-t border-white/10 pt-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Choose which sounds you want to hear
+                  </p>
+                  <div className="grid gap-3">
+                    {(Object.keys(SOUND_EFFECT_LABELS) as SoundEffect[]).map((effect) => (
+                      <div
+                        key={effect}
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="text-white font-medium text-sm">
+                            {SOUND_EFFECT_LABELS[effect].label}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {SOUND_EFFECT_LABELS[effect].description}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => previewSound(effect)}
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors text-sv-pink"
+                            data-testid={`button-preview-${effect}`}
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                          <Switch
+                            checked={soundSettings.effects[effect]}
+                            onCheckedChange={(checked) => handleEffectToggle(effect, checked)}
+                            data-testid={`switch-sound-${effect}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -23,7 +23,13 @@ The frontend is built with **React** using **TypeScript** and **Vite** as the bu
 - TanStack Query (React Query) for server state management, caching, and data synchronization
 - Local state with React hooks for component-level state
 
-**Animation**: Framer Motion is used for animations and transitions throughout the UI, particularly in battle cards and interactive elements.
+**Animation**: Framer Motion is used for animations and transitions throughout the UI, particularly in battle cards and interactive elements. Mobile devices have reduced animations for performance (using `useShouldReduceMotion` hook).
+
+**Sound Effects**: Customizable sound effects system using Web Audio API with synthesized sounds (no audio files needed):
+- Hook: `useSoundEffects` in `client/src/hooks/useSoundEffects.ts`
+- Settings stored in localStorage under `songversus_sound_settings`
+- 10 different sound effects: battleStart, battleEnd, vote, chatMessage, notification, levelUp, coinEarn, buttonClick, success, error
+- Master volume control and individual effect toggles in Settings page
 
 **Authentication**: Simple authentication system stored in localStorage. User credentials are managed through the `UserContext` provider, with login/signup handled via API calls.
 

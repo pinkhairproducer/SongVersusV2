@@ -8,12 +8,16 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef } from "react";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 export default function Notifications() {
   const { user } = useUser();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { playSound } = useSoundEffects();
+  const prevUnreadCountRef = useRef<number>(0);
 
   if (!user) {
     return (
@@ -49,9 +53,20 @@ export default function Notifications() {
     mutationFn: () => markAllNotificationsAsRead(user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+      playSound("success");
       toast({ title: "All notifications marked as read" });
     },
   });
+
+  useEffect(() => {
+    if (notifications) {
+      const currentUnreadCount = notifications.filter(n => !n.read).length;
+      if (prevUnreadCountRef.current > 0 && currentUnreadCount > prevUnreadCountRef.current) {
+        playSound("notification");
+      }
+      prevUnreadCountRef.current = currentUnreadCount;
+    }
+  }, [notifications, playSound]);
 
   if (isLoading) {
     return (

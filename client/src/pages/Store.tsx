@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 const MEMBERSHIP_FEATURES: Record<string, string[]> = {
   free: [
@@ -41,6 +42,7 @@ const MEMBERSHIP_FEATURES: Record<string, string[]> = {
 export default function Store() {
   const { user, refreshUser, login } = useUser();
   const { toast } = useToast();
+  const { playSound } = useSoundEffects();
   const [processingPurchase, setProcessingPurchase] = useState(false);
 
   const { data: products, isLoading } = useQuery({
@@ -59,11 +61,13 @@ export default function Store() {
         .then((result) => {
           if (result.success) {
             if (result.type === 'coins') {
+              playSound("coinEarn");
               toast({
                 title: "Purchase Complete!",
                 description: `You received ${result.amount} coins! New balance: ${result.newBalance}`,
               });
             } else if (result.type === 'membership') {
+              playSound("levelUp");
               toast({
                 title: "Welcome to " + (result.tier === 'elite' ? 'Elite' : 'Pro') + "!",
                 description: `You received ${result.bonusCoins} bonus coins with your membership.`,
@@ -82,6 +86,7 @@ export default function Store() {
     }
 
     if (urlParams.get('canceled') === 'true') {
+      playSound("error");
       toast({
         title: "Purchase Canceled",
         description: "Your purchase was canceled. No charges were made.",
@@ -89,7 +94,7 @@ export default function Store() {
       });
       window.history.replaceState({}, '', '/store');
     }
-  }, [user, toast, refreshUser, processingPurchase]);
+  }, [user, toast, refreshUser, processingPurchase, playSound]);
 
   const checkoutMutation = useMutation({
     mutationFn: async ({ priceId, mode }: { priceId: string; mode: 'subscription' | 'payment' }) => {

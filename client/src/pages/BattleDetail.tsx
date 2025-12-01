@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchBattle, fetchUserVote, voteOnBattle, fetchComments, postComment, fetchUser } from "@/lib/api";
 import { useUser } from "@/context/UserContext";
 import { useToast } from "@/hooks/use-toast";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 export default function BattleDetail() {
   const [, params] = useRoute("/battle/:id");
@@ -24,6 +25,7 @@ export default function BattleDetail() {
   const { user } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { playSound } = useSoundEffects();
 
   const { data: battle, isLoading: battleLoading } = useQuery({
     queryKey: ["battle", battleId],
@@ -59,12 +61,14 @@ export default function BattleDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["battle", battleId] });
       queryClient.invalidateQueries({ queryKey: ["vote", battleId, user?.id] });
+      playSound("vote");
       toast({
         title: "Vote Recorded!",
         description: "Your vote has been counted.",
       });
     },
     onError: (error: any) => {
+      playSound("error");
       toast({
         title: "Vote Failed",
         description: error.message || "Could not record vote",
@@ -78,11 +82,13 @@ export default function BattleDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", battleId] });
       setCommentText("");
+      playSound("success");
       toast({
         title: "Comment Posted!",
       });
     },
     onError: () => {
+      playSound("error");
       toast({
         title: "Failed to post comment",
         variant: "destructive",
